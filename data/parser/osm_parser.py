@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import math
 import re
 from typing import Dict, List, Optional, Tuple
-from graph import Node, Edge
+from app.graph.graph import Node, Edge
 
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -165,9 +165,8 @@ if __name__ == "__main__":
     greater-london-latest.osm.pbf - 127,6 MB
     london_large.osm - 2,3 MB
     '''
-    import sys
     #osm_file = "map.osm" if len(sys.argv) < 2 else sys.argv[1]
-    osm_file = "map.osm"
+    osm_file = "../maps_osm_pbf/map.osm"
     #osm_file = "greater-london-latest.osm.pbf"
     print(f"Parsing '{osm_file}'...")
     try:

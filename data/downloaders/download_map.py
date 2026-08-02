@@ -56,5 +56,5 @@ if __name__ == "__main__":
     max_lon = -0.10085105895996095
     max_lat = 51.62198665798708
     
-    output_filename = "london_large.osm"
+    output_filename = "../maps_osm_pbf/london_large.osm"
     download_osm_map(min_lon, min_lat, max_lon, max_lat, output_filename)

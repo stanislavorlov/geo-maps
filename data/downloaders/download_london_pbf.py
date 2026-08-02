@@ -3,7 +3,7 @@ import os
 
 def download_london_pbf():
     url = "https://download.geofabrik.de/europe/united-kingdom/england/greater-london-latest.osm.pbf"
-    output_filename = "greater-london-latest.osm.pbf"
+    output_filename = "../maps_osm_pbf/greater-london-latest.osm.pbf"
     
     print(f"Downloading Greater London extract from Geofabrik...")
     print(f"URL: {url}")
