@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request, Response
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-
 from models.geocode_model import ReverseGeocodeRequest
 from models.search_model import SearchRequest
 
