@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+  <head>
+<meta charset="UTF-8">
+<link rel="icon" href="https://www.geofabrik.de/favicon.ico" />
+<meta name="description" content="Download OpenStreetMap data for England for self-hosting or data analysis. OSM PBF and Shapefiles available.">
+<meta name="og:description" content="Download OpenStreetMap data for England for self-hosting or data analysis. OSM PBF and Shapefiles available.">
+<meta property="og:image" content="https://www.geofabrik.de/img/geofabrik_logo_notext.svg">
+<meta property="og:site_name" content="Geofabrik Download Server">
+<title>Download OpenStreetMap for England | Geofabrik Download Server</title>
+    <script type="text/javascript" src="//static.geofabrik.de/ol212/OpenLayers.js"></script>
+    <script type="text/javascript">
+        var map, layer, countryLayer;
+        function init()
+        {
+            map = new OpenLayers.Map('map');
+            layer = new OpenLayers.Layer.OSM("",
+                ["https://a.tile.geofabrik.de/5f33d2afc5074c6da1a5c2a8a960d501/${z}/${x}/${y}.png",
+                 "https://b.tile.geofabrik.de/5f33d2afc5074c6da1a5c2a8a960d501/${z}/${x}/${y}.png",
+                 "https://c.tile.geofabrik.de/5f33d2afc5074c6da1a5c2a8a960d501/${z}/${x}/${y}.png",
+                ],
+                { attribution: "", tileOptions : {crossOriginKeyword: null} }
+            ); // attribution in page footer
+            map.addLayer(layer);
+            layer = new OpenLayers.Layer.Vector("KML", {
+            strategies: [new OpenLayers.Strategy.Fixed()],
+            protocol: new OpenLayers.Protocol.HTTP({
+                url: "england.kml",
+                format: new OpenLayers.Format.KML({
+                    maxDepth: 2
+                })
+            }),
+            styleMap: new OpenLayers.StyleMap({
+            "default": new OpenLayers.Style({
+                graphicName: "cross",
+                pointRadius: 6,
+                fillOpacity: 0.50,
+                fillColor: "#ffcc66",
+                strokeColor: "#ff9933",
+                strokeWidth: 2
+            })
+            })
+            });
+            layer.events.register("loadend", this, function() { map.zoomToExtent(layer.getDataExtent()); });
+            map.addLayer(layer);
+        }
+        function loadkml(kmlname)
+        {
+            if (countryLayer) map.removeLayer(countryLayer);
+            countryLayer = 
+                new OpenLayers.Layer.Vector("KML", {
+                strategies: [new OpenLayers.Strategy.Fixed()],
+                protocol: new OpenLayers.Protocol.HTTP({
+                    url: kmlname,
+                    format: new OpenLayers.Format.KML({
+                        extractStyles: true,
+                        extractAttributes: true,
+                        maxDepth: 2
+                    })
+                })
+                });
+            map.addLayer(countryLayer);
+        }
+    </script>
+<link rel="stylesheet" type="text/css" href="/download.donation.css">
+</head><body onload='init();'><div id="donation">
+Do you find OpenStreetMap data useful? Consider giving something back in the OSMF's <a href="//supporting.openstreetmap.org">funding campaign!</a>
+</div>
+<div id="download-top">
+   <div id="download-top-right">
+      <img alt="header image" src="/img/geofabrik-downloads.png" height="20">
+   </div>
+</div>
+<div id="download-titlebar">
+<h1>Download OpenStreetMap data for this region:</h1>
+</div>
+<div class="download-main">
+<div class="leftColumn"><h2>England</h2>
+<p><a href="/europe/united-kingdom.html">[one level up]</a></p>    <p class="isPublicInfo">
+        The OpenStreetMap data files provided on this server do <b>not</b> contain the user names, user
+        IDs and changeset IDs of the OSM objects because these fields are assumed to contain personal
+        information about the OpenStreetMap contributors and are therefore subject to data protection regulations
+        in the European Union. 
+        <br>
+        <a href="https://osm-internal.download.geofabrik.de/europe/united-kingdom/england.html">Extracts with full metadata</a> are available to OpenStreetMap
+        contributors only.
+    </p>
+<h3>Commonly Used Formats</h3>
+<ul>
+<li><a href="england-latest.osm.pbf">england-latest.osm.pbf</a>, suitable for
+           Osmium, Osmosis, imposm, osm2pgsql, mkgmap, and others. This file was last 
+           modified 9 hours ago and contains all OSM data up to 2026-07-25T20:21:51Z. File size: 1.6&nbsp;GB. </li>
+
+<li><a href="england-latest-free.shp.zip">england-latest-free.shp.zip</a>, yields
+               a number of ESRI compatible shape files when unzipped. <a href="/osm-data-in-gis-formats-free.pdf">(Format description PDF)</a>
+               This file was last modified 6 hours ago. File size: 2.8&nbsp;GB. </li>
+
+<li><a href="england-latest-free.gpkg.zip">england-latest-free.gpkg.zip</a>, same as
+               shape file but in more modern Geopackage format.
+               This file was last modified 6 hours ago. File size: 2.9&nbsp;GB. </li>
+</ul><h3>Other Formats and Auxiliary Files</h3>
+<ul>
+<li><s>england-internal.osh.pbf</s> The history file
+                contains personal data and is available on the
+                <a href="https://osm-internal.download.geofabrik.de/europe/united-kingdom/england.html">internal server</a>
+                only. See notice above for further information.
+                </li>
+<li><a href="england.poly">.poly file</a> that describes the extent
+               of this region.</li>
+<li><font color="green">experimental</font> <a href="england-shortbread-1.0.mbtiles">
+               vector tile package</a> conforming to <a href="https://shortbread-tiles.org/">Shortbread schema</a>
+           for use with MapLibre and other MVT capable software</li>
+<li><a href="england-updates">.osc.gz files</a>
+                that contain all changes in this region, suitable e.g. for
+                Osmosis updates</li>
+<li><a href="//taginfo.geofabrik.de/europe:united-kingdom:england/">Taginfo statistics for this region</li>
+<li><a href="#" onclick="OpenLayers.Util.getElement('details').style.display='inline';">raw directory index</a> allowing you to
+            see and download older files</li></ul><div id="details" style="display:none"><table id="subregions"><tr><th class="subregion">file</th><th>date</th><th>size</th></tr><tr><td class="subregion"><a href="england-140101-free.shp.zip">england-140101-free.shp.zip</a></td><td class="subright">2018-04-27 01:01</td><td class="subright">726279352</td></tr>
+<tr><td class="subregion"><a href="england-140101-free.shp.zip.md5">england-140101-free.shp.zip.md5</a></td><td class="subright">2018-05-03 15:49</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-140101.osm.pbf">england-140101.osm.pbf</a></td><td class="subright">2014-01-02 02:18</td><td class="subright">450883559</td></tr>
+<tr><td class="subregion"><a href="england-150101-free.shp.zip">england-150101-free.shp.zip</a></td><td class="subright">2018-04-27 00:55</td><td class="subright">853028989</td></tr>
+<tr><td class="subregion"><a href="england-150101-free.shp.zip.md5">england-150101-free.shp.zip.md5</a></td><td class="subright">2018-05-03 15:48</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-150101.osm.pbf">england-150101.osm.pbf</a></td><td class="subright">2015-01-02 04:29</td><td class="subright">519889945</td></tr>
+<tr><td class="subregion"><a href="england-160101-free.shp.zip">england-160101-free.shp.zip</a></td><td class="subright">2018-04-27 00:52</td><td class="subright">984373588</td></tr>
+<tr><td class="subregion"><a href="england-160101-free.shp.zip.md5">england-160101-free.shp.zip.md5</a></td><td class="subright">2018-05-03 15:52</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-160101.osm.pbf">england-160101.osm.pbf</a></td><td class="subright">2016-01-02 04:59</td><td class="subright">589083432</td></tr>
+<tr><td class="subregion"><a href="england-170101-free.shp.zip">england-170101-free.shp.zip</a></td><td class="subright">2018-04-27 00:53</td><td class="subright">1093333216</td></tr>
+<tr><td class="subregion"><a href="england-170101-free.shp.zip.md5">england-170101-free.shp.zip.md5</a></td><td class="subright">2018-05-03 15:49</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-170101.osm.pbf">england-170101.osm.pbf</a></td><td class="subright">2017-01-02 04:34</td><td class="subright">650871433</td></tr>
+<tr><td class="subregion"><a href="england-180101-free.shp.zip">england-180101-free.shp.zip</a></td><td class="subright">2018-04-27 01:05</td><td class="subright">1230440295</td></tr>
+<tr><td class="subregion"><a href="england-180101-free.shp.zip.md5">england-180101-free.shp.zip.md5</a></td><td class="subright">2018-05-03 15:48</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-180101.osm.pbf">england-180101.osm.pbf</a></td><td class="subright">2018-01-02 01:15</td><td class="subright">723345818</td></tr>
+<tr><td class="subregion"><a href="england-190101-free.shp.zip">england-190101-free.shp.zip</a></td><td class="subright">2019-01-02 00:23</td><td class="subright">1375782287</td></tr>
+<tr><td class="subregion"><a href="england-190101-free.shp.zip.md5">england-190101-free.shp.zip.md5</a></td><td class="subright">2019-01-02 00:23</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-190101.osm.pbf">england-190101.osm.pbf</a></td><td class="subright">2019-01-02 00:09</td><td class="subright">800451395</td></tr>
+<tr><td class="subregion"><a href="england-200101-free.shp.zip">england-200101-free.shp.zip</a></td><td class="subright">2020-05-02 23:37</td><td class="subright">1532740044</td></tr>
+<tr><td class="subregion"><a href="england-200101-free.shp.zip.md5">england-200101-free.shp.zip.md5</a></td><td class="subright">2020-05-02 23:37</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-200101.osm.pbf">england-200101.osm.pbf</a></td><td class="subright">2020-02-19 15:38</td><td class="subright">879644088</td></tr>
+<tr><td class="subregion"><a href="england-210101-free.shp.zip">england-210101-free.shp.zip</a></td><td class="subright">2021-01-02 02:48</td><td class="subright">1759489941</td></tr>
+<tr><td class="subregion"><a href="england-210101-free.shp.zip.md5">england-210101-free.shp.zip.md5</a></td><td class="subright">2021-01-02 02:48</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-210101.osm.pbf">england-210101.osm.pbf</a></td><td class="subright">2021-01-02 01:26</td><td class="subright">1000355469</td></tr>
+<tr><td class="subregion"><a href="england-220101-free.shp.zip">england-220101-free.shp.zip</a></td><td class="subright">2022-01-02 04:20</td><td class="subright">1987036082</td></tr>
+<tr><td class="subregion"><a href="england-220101-free.shp.zip.md5">england-220101-free.shp.zip.md5</a></td><td class="subright">2022-01-02 04:20</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-220101.osm.pbf">england-220101.osm.pbf</a></td><td class="subright">2022-01-02 04:04</td><td class="subright">1138528594</td></tr>
+<tr><td class="subregion"><a href="england-230101-free.shp.zip">england-230101-free.shp.zip</a></td><td class="subright">2023-01-02 03:59</td><td class="subright">2158780955</td></tr>
+<tr><td class="subregion"><a href="england-230101-free.shp.zip.md5">england-230101-free.shp.zip.md5</a></td><td class="subright">2023-01-02 04:00</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-230101.osm.pbf">england-230101.osm.pbf</a></td><td class="subright">2023-01-02 03:20</td><td class="subright">1236717517</td></tr>
+<tr><td class="subregion"><a href="england-240101-free.shp.zip">england-240101-free.shp.zip</a></td><td class="subright">2024-01-02 03:42</td><td class="subright">2319601681</td></tr>
+<tr><td class="subregion"><a href="england-240101-free.shp.zip.md5">england-240101-free.shp.zip.md5</a></td><td class="subright">2024-01-02 03:42</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-240101.osm.pbf">england-240101.osm.pbf</a></td><td class="subright">2024-01-02 02:57</td><td class="subright">1331403613</td></tr>
+<tr><td class="subregion"><a href="england-250101-free.shp.zip">england-250101-free.shp.zip</a></td><td class="subright">2025-01-02 04:05</td><td class="subright">2543790371</td></tr>
+<tr><td class="subregion"><a href="england-250101-free.shp.zip.md5">england-250101-free.shp.zip.md5</a></td><td class="subright">2025-01-02 04:06</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-250101.osm.pbf">england-250101.osm.pbf</a></td><td class="subright">2025-01-02 03:42</td><td class="subright">1451432458</td></tr>
+<tr><td class="subregion"><a href="england-260101-free.shp.zip">england-260101-free.shp.zip</a></td><td class="subright">2026-01-02 05:53</td><td class="subright">2744453713</td></tr>
+<tr><td class="subregion"><a href="england-260101-free.shp.zip.md5">england-260101-free.shp.zip.md5</a></td><td class="subright">2026-01-02 05:53</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-260101.osm.pbf">england-260101.osm.pbf</a></td><td class="subright">2026-01-02 04:00</td><td class="subright">1602300572</td></tr>
+<tr><td class="subregion"><a href="england-260101.osm.pbf.md5">england-260101.osm.pbf.md5</a></td><td class="subright">2026-01-02 04:00</td><td class="subright">57</td></tr>
+<tr><td class="subregion"><a href="england-260501-free.gpkg.zip">england-260501-free.gpkg.zip</a></td><td class="subright">2026-05-02 02:53</td><td class="subright">3060682923</td></tr>
+<tr><td class="subregion"><a href="england-260501-free.shp.zip">england-260501-free.shp.zip</a></td><td class="subright">2026-05-02 02:48</td><td class="subright">2950479230</td></tr>
+<tr><td class="subregion"><a href="england-260501-free.shp.zip.md5">england-260501-free.shp.zip.md5</a></td><td class="subright">2026-05-02 02:48</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-260501.osm.pbf">england-260501.osm.pbf</a></td><td class="subright">2026-05-02 01:03</td><td class="subright">1651178118</td></tr>
+<tr><td class="subregion"><a href="england-260501.osm.pbf.md5">england-260501.osm.pbf.md5</a></td><td class="subright">2026-05-02 01:03</td><td class="subright">57</td></tr>
+<tr><td class="subregion"><a href="england-260601-free.gpkg.zip">england-260601-free.gpkg.zip</a></td><td class="subright">2026-06-02 04:24</td><td class="subright">3079793328</td></tr>
+<tr><td class="subregion"><a href="england-260601-free.shp.zip">england-260601-free.shp.zip</a></td><td class="subright">2026-06-02 04:19</td><td class="subright">2968771990</td></tr>
+<tr><td class="subregion"><a href="england-260601-free.shp.zip.md5">england-260601-free.shp.zip.md5</a></td><td class="subright">2026-06-02 04:19</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-260601.osm.pbf">england-260601.osm.pbf</a></td><td class="subright">2026-06-02 00:10</td><td class="subright">1662865142</td></tr>
+<tr><td class="subregion"><a href="england-260601.osm.pbf.md5">england-260601.osm.pbf.md5</a></td><td class="subright">2026-06-02 00:10</td><td class="subright">57</td></tr>
+<tr><td class="subregion"><a href="england-260701-free.gpkg.zip">england-260701-free.gpkg.zip</a></td><td class="subright">2026-07-02 01:54</td><td class="subright">3087682362</td></tr>
+<tr><td class="subregion"><a href="england-260701-free.shp.zip">england-260701-free.shp.zip</a></td><td class="subright">2026-07-02 01:42</td><td class="subright">2976431077</td></tr>
+<tr><td class="subregion"><a href="england-260701-free.shp.zip.md5">england-260701-free.shp.zip.md5</a></td><td class="subright">2026-07-02 01:42</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-260701.osm.pbf">england-260701.osm.pbf</a></td><td class="subright">2026-07-01 23:54</td><td class="subright">1669805245</td></tr>
+<tr><td class="subregion"><a href="england-260701.osm.pbf.md5">england-260701.osm.pbf.md5</a></td><td class="subright">2026-07-01 23:54</td><td class="subright">57</td></tr>
+<tr><td class="subregion"><a href="england-260720-free.gpkg.zip">england-260720-free.gpkg.zip</a></td><td class="subright">2026-07-21 04:54</td><td class="subright">3097490173</td></tr>
+<tr><td class="subregion"><a href="england-260720-free.shp.zip">england-260720-free.shp.zip</a></td><td class="subright">2026-07-21 04:49</td><td class="subright">2985805503</td></tr>
+<tr><td class="subregion"><a href="england-260720-free.shp.zip.md5">england-260720-free.shp.zip.md5</a></td><td class="subright">2026-07-21 04:49</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-260720.osm.pbf">england-260720.osm.pbf</a></td><td class="subright">2026-07-21 02:23</td><td class="subright">1676285713</td></tr>
+<tr><td class="subregion"><a href="england-260720.osm.pbf.md5">england-260720.osm.pbf.md5</a></td><td class="subright">2026-07-21 02:23</td><td class="subright">57</td></tr>
+<tr><td class="subregion"><a href="england-260721-free.gpkg.zip">england-260721-free.gpkg.zip</a></td><td class="subright">2026-07-22 02:45</td><td class="subright">3093945455</td></tr>
+<tr><td class="subregion"><a href="england-260721-free.shp.zip">england-260721-free.shp.zip</a></td><td class="subright">2026-07-22 02:39</td><td class="subright">2982387516</td></tr>
+<tr><td class="subregion"><a href="england-260721-free.shp.zip.md5">england-260721-free.shp.zip.md5</a></td><td class="subright">2026-07-22 02:39</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-260721.osm.pbf">england-260721.osm.pbf</a></td><td class="subright">2026-07-22 02:17</td><td class="subright">1675342159</td></tr>
+<tr><td class="subregion"><a href="england-260721.osm.pbf.md5">england-260721.osm.pbf.md5</a></td><td class="subright">2026-07-22 02:17</td><td class="subright">57</td></tr>
+<tr><td class="subregion"><a href="england-260722-free.gpkg.zip">england-260722-free.gpkg.zip</a></td><td class="subright">2026-07-23 02:33</td><td class="subright">3092452652</td></tr>
+<tr><td class="subregion"><a href="england-260722-free.shp.zip">england-260722-free.shp.zip</a></td><td class="subright">2026-07-23 02:27</td><td class="subright">2980940766</td></tr>
+<tr><td class="subregion"><a href="england-260722-free.shp.zip.md5">england-260722-free.shp.zip.md5</a></td><td class="subright">2026-07-23 02:27</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-260722.osm.pbf">england-260722.osm.pbf</a></td><td class="subright">2026-07-23 01:46</td><td class="subright">1675132757</td></tr>
+<tr><td class="subregion"><a href="england-260722.osm.pbf.md5">england-260722.osm.pbf.md5</a></td><td class="subright">2026-07-23 01:46</td><td class="subright">57</td></tr>
+<tr><td class="subregion"><a href="england-260723-free.gpkg.zip">england-260723-free.gpkg.zip</a></td><td class="subright">2026-07-24 05:40</td><td class="subright">3092430716</td></tr>
+<tr><td class="subregion"><a href="england-260723-free.shp.zip">england-260723-free.shp.zip</a></td><td class="subright">2026-07-24 05:34</td><td class="subright">2980841250</td></tr>
+<tr><td class="subregion"><a href="england-260723-free.shp.zip.md5">england-260723-free.shp.zip.md5</a></td><td class="subright">2026-07-24 05:34</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-260723.osm.pbf">england-260723.osm.pbf</a></td><td class="subright">2026-07-24 04:49</td><td class="subright">1675532747</td></tr>
+<tr><td class="subregion"><a href="england-260723.osm.pbf.md5">england-260723.osm.pbf.md5</a></td><td class="subright">2026-07-24 04:49</td><td class="subright">57</td></tr>
+<tr><td class="subregion"><a href="england-260724-free.gpkg.zip">england-260724-free.gpkg.zip</a></td><td class="subright">2026-07-25 03:53</td><td class="subright">3093171398</td></tr>
+<tr><td class="subregion"><a href="england-260724-free.shp.zip">england-260724-free.shp.zip</a></td><td class="subright">2026-07-25 03:48</td><td class="subright">2981587966</td></tr>
+<tr><td class="subregion"><a href="england-260724-free.shp.zip.md5">england-260724-free.shp.zip.md5</a></td><td class="subright">2026-07-25 03:48</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-260724.osm.pbf">england-260724.osm.pbf</a></td><td class="subright">2026-07-25 00:29</td><td class="subright">1675881207</td></tr>
+<tr><td class="subregion"><a href="england-260724.osm.pbf.md5">england-260724.osm.pbf.md5</a></td><td class="subright">2026-07-25 00:29</td><td class="subright">57</td></tr>
+<tr><td class="subregion"><a href="england-260725-free.gpkg.zip">england-260725-free.gpkg.zip</a></td><td class="subright">2026-07-26 04:47</td><td class="subright">3093579449</td></tr>
+<tr><td class="subregion"><a href="england-260725-free.shp.zip">england-260725-free.shp.zip</a></td><td class="subright">2026-07-26 04:42</td><td class="subright">2981998335</td></tr>
+<tr><td class="subregion"><a href="england-260725-free.shp.zip.md5">england-260725-free.shp.zip.md5</a></td><td class="subright">2026-07-26 04:42</td><td class="subright">62</td></tr>
+<tr><td class="subregion"><a href="england-260725.osm.pbf">england-260725.osm.pbf</a></td><td class="subright">2026-07-26 01:48</td><td class="subright">1676248372</td></tr>
+<tr><td class="subregion"><a href="england-260725.osm.pbf.md5">england-260725.osm.pbf.md5</a></td><td class="subright">2026-07-26 01:48</td><td class="subright">57</td></tr>
+<tr><td class="subregion"><a href="england-updates">england-updates</a></td><td class="subright">2026-07-26 01:47</td><td class="subright">4096</td></tr>
+<tr><td class="subregion"><a href="england.kml">england.kml</a></td><td class="subright">2026-07-26 01:46</td><td class="subright">8578</td></tr>
+<tr><td class="subregion"><a href="england.poly">england.poly</a></td><td class="subright">2026-07-26 01:46</td><td class="subright">11945</td></tr>
+</table></div><h3>Sub Regions</h3><p>Click on the region name to see the overview page for that region, or select one of the
+file extension links for quick access.</p>
+<table id="subregions">
+<tr>
+   <th class="subregion">Sub Region</th>
+   <th colspan="3">Quick Links</th>
+</tr>
+<tr>
+   <th>&nbsp;</th>
+   <th colspan="2">.osm.pbf</th>
+   <th>.gpkg.zip</th>
+</tr>
+<tr onMouseOver="loadkml('england/bedfordshire.kml')"><td class="subregion"><a href="england/bedfordshire.html">Bedfordshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/bedfordshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(14.1&nbsp;MB)</td><td> <a href="england/bedfordshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/berkshire.kml')"><td class="subregion"><a href="england/berkshire.html">Berkshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/berkshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(21.3&nbsp;MB)</td><td> <a href="england/berkshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/bristol.kml')"><td class="subregion"><a href="england/bristol.html">Bristol</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/bristol-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(12.5&nbsp;MB)</td><td> <a href="england/bristol-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/buckinghamshire.kml')"><td class="subregion"><a href="england/buckinghamshire.html">Buckinghamshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/buckinghamshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(21.3&nbsp;MB)</td><td> <a href="england/buckinghamshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/cambridgeshire.kml')"><td class="subregion"><a href="england/cambridgeshire.html">Cambridgeshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/cambridgeshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(32.8&nbsp;MB)</td><td> <a href="england/cambridgeshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/cheshire.kml')"><td class="subregion"><a href="england/cheshire.html">Cheshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/cheshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(36.0&nbsp;MB)</td><td> <a href="england/cheshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/cornwall.kml')"><td class="subregion"><a href="england/cornwall.html">Cornwall</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/cornwall-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(32.1&nbsp;MB)</td><td> <a href="england/cornwall-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/cumbria.kml')"><td class="subregion"><a href="england/cumbria.html">Cumbria</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/cumbria-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(43.1&nbsp;MB)</td><td> <a href="england/cumbria-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/derbyshire.kml')"><td class="subregion"><a href="england/derbyshire.html">Derbyshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/derbyshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(41.5&nbsp;MB)</td><td> <a href="england/derbyshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/devon.kml')"><td class="subregion"><a href="england/devon.html">Devon</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/devon-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(54&nbsp;MB)</td><td> <a href="england/devon-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/dorset.kml')"><td class="subregion"><a href="england/dorset.html">Dorset</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/dorset-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(28.6&nbsp;MB)</td><td> <a href="england/dorset-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/durham.kml')"><td class="subregion"><a href="england/durham.html">Durham</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/durham-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(22.1&nbsp;MB)</td><td> <a href="england/durham-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/east-sussex.kml')"><td class="subregion"><a href="england/east-sussex.html">East Sussex</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/east-sussex-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(20.1&nbsp;MB)</td><td> <a href="england/east-sussex-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/east-yorkshire-with-hull.kml')"><td class="subregion"><a href="england/east-yorkshire-with-hull.html">East Yorkshire with Hull</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/east-yorkshire-with-hull-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(18.3&nbsp;MB)</td><td> <a href="england/east-yorkshire-with-hull-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/essex.kml')"><td class="subregion"><a href="england/essex.html">Essex</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/essex-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(47.0&nbsp;MB)</td><td> <a href="england/essex-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/gloucestershire.kml')"><td class="subregion"><a href="england/gloucestershire.html">Gloucestershire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/gloucestershire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(38.6&nbsp;MB)</td><td> <a href="england/gloucestershire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/greater-london.kml')"><td class="subregion"><a href="england/greater-london.html">Greater London</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/greater-london-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(121&nbsp;MB)</td><td> <a href="england/greater-london-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/greater-manchester.kml')"><td class="subregion"><a href="england/greater-manchester.html">Greater Manchester</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/greater-manchester-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(48.2&nbsp;MB)</td><td> <a href="england/greater-manchester-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/hampshire.kml')"><td class="subregion"><a href="england/hampshire.html">Hampshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/hampshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(58&nbsp;MB)</td><td> <a href="england/hampshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/herefordshire.kml')"><td class="subregion"><a href="england/herefordshire.html">Herefordshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/herefordshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(10.6&nbsp;MB)</td><td> <a href="england/herefordshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/hertfordshire.kml')"><td class="subregion"><a href="england/hertfordshire.html">Hertfordshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/hertfordshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(36.2&nbsp;MB)</td><td> <a href="england/hertfordshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/isle-of-wight.kml')"><td class="subregion"><a href="england/isle-of-wight.html">Isle of Wight</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/isle-of-wight-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(8.5&nbsp;MB)</td><td> <a href="england/isle-of-wight-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/kent.kml')"><td class="subregion"><a href="england/kent.html">Kent</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/kent-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(50&nbsp;MB)</td><td> <a href="england/kent-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/lancashire.kml')"><td class="subregion"><a href="england/lancashire.html">Lancashire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/lancashire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(39.1&nbsp;MB)</td><td> <a href="england/lancashire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/leicestershire.kml')"><td class="subregion"><a href="england/leicestershire.html">Leicestershire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/leicestershire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(19.2&nbsp;MB)</td><td> <a href="england/leicestershire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/lincolnshire.kml')"><td class="subregion"><a href="england/lincolnshire.html">Lincolnshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/lincolnshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(40.8&nbsp;MB)</td><td> <a href="england/lincolnshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/merseyside.kml')"><td class="subregion"><a href="england/merseyside.html">Merseyside</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/merseyside-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(23.7&nbsp;MB)</td><td> <a href="england/merseyside-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/norfolk.kml')"><td class="subregion"><a href="england/norfolk.html">Norfolk</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/norfolk-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(44.4&nbsp;MB)</td><td> <a href="england/norfolk-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/north-yorkshire.kml')"><td class="subregion"><a href="england/north-yorkshire.html">North Yorkshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/north-yorkshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(58&nbsp;MB)</td><td> <a href="england/north-yorkshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/northamptonshire.kml')"><td class="subregion"><a href="england/northamptonshire.html">Northamptonshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/northamptonshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(20.9&nbsp;MB)</td><td> <a href="england/northamptonshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/northumberland.kml')"><td class="subregion"><a href="england/northumberland.html">Northumberland</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/northumberland-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(24.8&nbsp;MB)</td><td> <a href="england/northumberland-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/nottinghamshire.kml')"><td class="subregion"><a href="england/nottinghamshire.html">Nottinghamshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/nottinghamshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(36.5&nbsp;MB)</td><td> <a href="england/nottinghamshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/oxfordshire.kml')"><td class="subregion"><a href="england/oxfordshire.html">Oxfordshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/oxfordshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(26.4&nbsp;MB)</td><td> <a href="england/oxfordshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/rutland.kml')"><td class="subregion"><a href="england/rutland.html">Rutland</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/rutland-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(1.8&nbsp;MB)</td><td> <a href="england/rutland-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/shropshire.kml')"><td class="subregion"><a href="england/shropshire.html">Shropshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/shropshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(23.8&nbsp;MB)</td><td> <a href="england/shropshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/somerset.kml')"><td class="subregion"><a href="england/somerset.html">Somerset</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/somerset-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(46.7&nbsp;MB)</td><td> <a href="england/somerset-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/south-yorkshire.kml')"><td class="subregion"><a href="england/south-yorkshire.html">South Yorkshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/south-yorkshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(28.4&nbsp;MB)</td><td> <a href="england/south-yorkshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/staffordshire.kml')"><td class="subregion"><a href="england/staffordshire.html">Staffordshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/staffordshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(29.0&nbsp;MB)</td><td> <a href="england/staffordshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/suffolk.kml')"><td class="subregion"><a href="england/suffolk.html">Suffolk</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/suffolk-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(31.5&nbsp;MB)</td><td> <a href="england/suffolk-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/surrey.kml')"><td class="subregion"><a href="england/surrey.html">Surrey</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/surrey-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(40.9&nbsp;MB)</td><td> <a href="england/surrey-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/tyne-and-wear.kml')"><td class="subregion"><a href="england/tyne-and-wear.html">Tyne and Wear</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/tyne-and-wear-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(18.4&nbsp;MB)</td><td> <a href="england/tyne-and-wear-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/warwickshire.kml')"><td class="subregion"><a href="england/warwickshire.html">Warwickshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/warwickshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(23.0&nbsp;MB)</td><td> <a href="england/warwickshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/west-midlands.kml')"><td class="subregion"><a href="england/west-midlands.html">West Midlands</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/west-midlands-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(56&nbsp;MB)</td><td> <a href="england/west-midlands-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/west-sussex.kml')"><td class="subregion"><a href="england/west-sussex.html">West Sussex</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/west-sussex-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(46.6&nbsp;MB)</td><td> <a href="england/west-sussex-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/west-yorkshire.kml')"><td class="subregion"><a href="england/west-yorkshire.html">West Yorkshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/west-yorkshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(50&nbsp;MB)</td><td> <a href="england/west-yorkshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/wiltshire.kml')"><td class="subregion"><a href="england/wiltshire.html">Wiltshire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/wiltshire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(32.3&nbsp;MB)</td><td> <a href="england/wiltshire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+<tr onMouseOver="loadkml('england/worcestershire.kml')"><td class="subregion"><a href="england/worcestershire.html">Worcestershire</a></td>
+<td style="border-right: 0px; margin-right: 0px; padding-right: 0px;"><a href="england/worcestershire-latest.osm.pbf">[.osm.pbf]</a></td><td style="border-left: 0px; margin-left: 0px; padding-left: 0px;">(19.2&nbsp;MB)</td><td> <a href="england/worcestershire-latest-free.gpkg.zip">[.gpkg.zip]</a></td></tr>
+</table>
+</div>
+<div id="download-right">
+   <div id="noscroll">
+   <div id="map"></div>
+
+   <div class="customized_shapes">
+<p>
+      <img alt="small flag of UK" src="/img/en.png">
+Not what you were looking for?
+Geofabrik is a consulting and software development firm based in Karlsruhe, Germany
+specializing in OpenStreetMap services. We're happy to help you with data
+preparation, processing, server setup and the like. <a href="http://www.geofabrik.de/data/shapefiles.html">Check out our web site</a>
+and contact us if we can be of service.
+
+      </p>
+   </div>
+   
+   <div class="customized_shapes">
+      <p>
+      <img alt="small flag of Germany" src="/img/de.png">
+      Nicht das Richtige dabei? 
+Die Geofabrik ist ein auf OpenStreetMap spezialisiertes Beratungs- und Softwareentwicklungsunternehmen in Karlsruhe.
+Gern helfen wir Ihnen bei der Datenaufbereitung, Datenkonvertierung, Serverinstallation und &auml;hnlichen Aufgaben.
+<a href="http://www.geofabrik.de/data/shapefiles.html">Besuchen Sie unsere Webseite</a> und sprechen Sie mit uns, wenn wir Ihnen 
+helfen k&ouml;nnen.
+      </p>
+   </div>
+   </div>
+</div>
+</div>
+<div id="download-copyright">
+Data processed by
+<a href="http://www.geofabrik.de/">Geofabrik GmbH</a>
+and created by 
+<a href="http://www.openstreetmap.org/">OpenStreetMap Contributors</a>
+|
+<a href="http://opendatacommons.org/licenses/odbl/">License: ODbL 1.0</a>
+|
+<a href="http://www.geofabrik.de/geofabrik/contact.html">Contact</a>
+|
+<a href="http://www.geofabrik.de/geofabrik/imprint.html">Legal Notice/Privacy Policy</a>

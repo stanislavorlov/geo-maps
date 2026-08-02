@@ -61,81 +61,139 @@ def parse_speed(speed_str: Optional[str]) -> Optional[int]:
 
 def parse_osm_to_graph(file_path: str) -> Tuple[Dict[int, Node], List[Edge]]:
     """
-    Parses map.osm file and returns a dictionary of nodes and a list of edges.
+    Parses map.osm or .pbf file and returns a dictionary of nodes and a list of edges.
     """
-    # Parse the XML file
-    tree = ET.parse(file_path)
-    root = tree.getroot()
-
     nodes: Dict[int, Node] = {}
     edges: List[Edge] = []
 
-    # 1. Parse all nodes
-    for node_elem in root.findall("node"):
-        node_id = int(node_elem.get("id"))
-        lat = float(node_elem.get("lat"))
-        lon = float(node_elem.get("lon"))
-        nodes[node_id] = Node(id=node_id, lat=lat, lon=lon)
+    if file_path.endswith('.pbf'):
+        import osmiter
+        print("Using osmiter to parse PBF file...")
+        # Since osmiter streams elements, and nodes are ordered before ways in PBF files,
+        # we can build the node map and generate edges in a single pass.
+        for elem in osmiter.iter_from_osm(file_path):
+            el_type = elem.get("type")
+            if el_type == "node":
+                node_id = elem["id"]
+                nodes[node_id] = Node(id=node_id, lat=elem["lat"], lon=elem["lon"])
+            elif el_type == "way":
+                tags = elem.get("tag", {})
+                road_type = tags.get("highway")
+                if not road_type:
+                    continue
+                nd_refs = elem.get("nd", [])
+                if len(nd_refs) < 2:
+                    continue
+                speed = parse_speed(tags.get("maxspeed"))
+                oneway = tags.get("oneway")
+                
+                is_oneway = oneway in ("yes", "1")
+                is_reverse = oneway == "-1"
+                
+                for i in range(len(nd_refs) - 1):
+                    u_id = nd_refs[i]
+                    v_id = nd_refs[i+1]
+                    
+                    if u_id not in nodes or v_id not in nodes:
+                        continue
+                    
+                    node_u = nodes[u_id]
+                    node_v = nodes[v_id]
+                    dist = haversine_distance(node_u.lat, node_u.lon, node_v.lat, node_v.lon)
+                    
+                    if not is_reverse:
+                        edges.append(Edge(
+                            from_id=u_id,
+                            to_id=v_id,
+                            distance=dist,
+                            speed=speed,
+                            road_type=road_type
+                        ))
+                    if not is_oneway:
+                        edges.append(Edge(
+                            from_id=v_id,
+                            to_id=u_id,
+                            distance=dist,
+                            speed=speed,
+                            road_type=road_type
+                        ))
+    else:
+        # Parse the XML file
+        tree = ET.parse(file_path)
+        root = tree.getroot()
 
-    # 2. Parse all ways that represent roads (have a 'highway' tag)
-    for way_elem in root.findall("way"):
-        tags = {tag.get("k"): tag.get("v") for tag in way_elem.findall("tag")}
-        
-        # Check if this way is a highway (road)
-        road_type = tags.get("highway")
-        if not road_type:
-            continue
+        # 1. Parse all nodes
+        for node_elem in root.findall("node"):
+            node_id = int(node_elem.get("id"))
+            lat = float(node_elem.get("lat"))
+            lon = float(node_elem.get("lon"))
+            nodes[node_id] = Node(id=node_id, lat=lat, lon=lon)
 
-        # Get node references
-        nd_refs = [int(nd.get("ref")) for nd in way_elem.findall("nd")]
-        if len(nd_refs) < 2:
-            continue
-
-        # Parse speed and oneway status
-        speed = parse_speed(tags.get("maxspeed"))
-        oneway = tags.get("oneway")
-
-        # Determine directional connectivity
-        # Default in OSM is bidirectional unless oneway is explicitly 'yes', '1', or '-1'
-        is_oneway = oneway in ("yes", "1")
-        is_reverse = oneway == "-1"
-
-        # Create edges between consecutive nodes in the way
-        for i in range(len(nd_refs) - 1):
-            u_id = nd_refs[i]
-            v_id = nd_refs[i+1]
-
-            # Verify that both nodes exist in our parsed nodes list
-            if u_id not in nodes or v_id not in nodes:
+        # 2. Parse all ways that represent roads (have a 'highway' tag)
+        for way_elem in root.findall("way"):
+            tags = {tag.get("k"): tag.get("v") for tag in way_elem.findall("tag")}
+            
+            # Check if this way is a highway (road)
+            road_type = tags.get("highway")
+            if not road_type:
                 continue
 
-            node_u = nodes[u_id]
-            node_v = nodes[v_id]
-            dist = haversine_distance(node_u.lat, node_u.lon, node_v.lat, node_v.lon)
+            # Get node references
+            nd_refs = [int(nd.get("ref")) for nd in way_elem.findall("nd")]
+            if len(nd_refs) < 2:
+                continue
 
-            if not is_reverse:
-                edges.append(Edge(
-                    from_id=u_id,
-                    to_id=v_id,
-                    distance=dist,
-                    speed=speed,
-                    road_type=road_type
-                ))
-            
-            if not is_oneway:
-                edges.append(Edge(
-                    from_id=v_id,
-                    to_id=u_id,
-                    distance=dist,
-                    speed=speed,
-                    road_type=road_type
-                ))
+            # Parse speed and oneway status
+            speed = parse_speed(tags.get("maxspeed"))
+            oneway = tags.get("oneway")
+
+            # Determine directional connectivity
+            is_oneway = oneway in ("yes", "1")
+            is_reverse = oneway == "-1"
+
+            # Create edges between consecutive nodes in the way
+            for i in range(len(nd_refs) - 1):
+                u_id = nd_refs[i]
+                v_id = nd_refs[i+1]
+
+                # Verify that both nodes exist in our parsed nodes list
+                if u_id not in nodes or v_id not in nodes:
+                    continue
+
+                node_u = nodes[u_id]
+                node_v = nodes[v_id]
+                dist = haversine_distance(node_u.lat, node_u.lon, node_v.lat, node_v.lon)
+
+                if not is_reverse:
+                    edges.append(Edge(
+                        from_id=u_id,
+                        to_id=v_id,
+                        distance=dist,
+                        speed=speed,
+                        road_type=road_type
+                    ))
+                
+                if not is_oneway:
+                    edges.append(Edge(
+                        from_id=v_id,
+                        to_id=u_id,
+                        distance=dist,
+                        speed=speed,
+                        road_type=road_type
+                    ))
 
     return nodes, edges
 
 if __name__ == "__main__":
+    '''
+    map.osm - 1,2 MB
+    greater-london-latest.osm.pbf - 127,6 MB
+    london_large.osm - 2,3 MB
+    '''
     import sys
-    osm_file = "map.osm" if len(sys.argv) < 2 else sys.argv[1]
+    #osm_file = "map.osm" if len(sys.argv) < 2 else sys.argv[1]
+    #osm_file = "map.osm"
+    osm_file = "greater-london-latest.osm.pbf"
     print(f"Parsing '{osm_file}'...")
     try:
         nodes, edges = parse_osm_to_graph(osm_file)
