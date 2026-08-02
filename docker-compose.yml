@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: geo_maps_db
+    environment:
+      POSTGRES_USER: geo_user
+      POSTGRES_PASSWORD: geo_password
+      POSTGRES_DB: geo_maps
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

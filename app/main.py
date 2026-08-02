@@ -2,10 +2,24 @@ from fastapi import FastAPI, Request, Response
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+from contextlib import asynccontextmanager
+
 from models.geocode_model import ReverseGeocodeRequest
 from models.search_model import SearchRequest
+from database.database import engine, Base
+import database.models  # Import models to ensure they are registered with Base
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Create all tables in the database
+    async with engine.begin() as conn:
+        # Note: In production you would probably use Alembic instead of this
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    # Clean up (if needed)
+    await engine.dispose()
+
+app = FastAPI(lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory="app/templates"), name="static")
 templates = Jinja2Templates(directory="app/templates")
