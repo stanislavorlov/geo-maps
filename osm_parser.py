@@ -1,34 +1,9 @@
 import xml.etree.ElementTree as ET
 import math
 import re
-from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional, Tuple
+from graph import Node, Edge
 
-@dataclass
-class Node:
-    id: int
-    lat: float
-    lon: float
-
-    def to_dict(self) -> dict:
-        return asdict(self)
-
-@dataclass
-class Edge:
-    from_id: int
-    to_id: int
-    distance: float  # in meters
-    speed: Optional[int]  # speed limit in mph/kph as integer
-    road_type: str
-
-    def to_dict(self) -> dict:
-        return {
-            "from": self.from_id,
-            "to": self.to_id,
-            "distance": round(self.distance, 2),
-            "speed": self.speed,
-            "road_type": self.road_type
-        }
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
@@ -192,8 +167,8 @@ if __name__ == "__main__":
     '''
     import sys
     #osm_file = "map.osm" if len(sys.argv) < 2 else sys.argv[1]
-    #osm_file = "map.osm"
-    osm_file = "greater-london-latest.osm.pbf"
+    osm_file = "map.osm"
+    #osm_file = "greater-london-latest.osm.pbf"
     print(f"Parsing '{osm_file}'...")
     try:
         nodes, edges = parse_osm_to_graph(osm_file)
