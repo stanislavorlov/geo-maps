@@ -28,8 +28,15 @@
             flex-direction: column;
             gap: 12px;
         }
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
         .search-input-group input {
-            padding: 12px 16px;
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            box-sizing: border-box;
             border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 14px;
@@ -39,13 +46,42 @@
         .search-input-group input:focus {
             border-color: #1a73e8;
         }
+        .map-pick-btn {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            opacity: 0.5;
+            transition: opacity 0.2s, background 0.2s;
+            padding: 4px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .map-pick-btn:hover {
+            opacity: 0.8;
+            background: #f1f3f4;
+        }
+        .map-pick-btn.active {
+            opacity: 1;
+            background: #e8f0fe;
+        }
     </style>
 </head>
 <body>
     <div class="search-panel">
         <div class="search-input-group">
-            <input type="text" id="from-input" placeholder="Choose starting point...">
-            <input type="text" id="to-input" placeholder="Choose destination...">
+            <div class="input-wrapper">
+                <input type="text" id="from-input" placeholder="Choose starting point...">
+                <button class="map-pick-btn active" data-target="from-input" title="Choose on map">📍</button>
+            </div>
+            <div class="input-wrapper">
+                <input type="text" id="to-input" placeholder="Choose destination...">
+                <button class="map-pick-btn" data-target="to-input" title="Choose on map">📍</button>
+            </div>
         </div>
     </div>
     <div id="map"></div>
@@ -58,15 +94,84 @@
         }).addTo(map);
 
         var popup = L.popup();
-
-        function onMapClick(e) {
-            popup
-                .setLatLng(e.latlng)
-                .setContent("You clicked the map at " + e.latlng.toString())
-                .openOn(map);
+        
+        let activeInputId = 'from-input';
+        
+        function setActiveInput(inputId) {
+            activeInputId = inputId;
+            document.querySelectorAll('.map-pick-btn').forEach(b => {
+                if (b.getAttribute('data-target') === inputId) {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
         }
 
+        // Setup map pick buttons
+        document.querySelectorAll('.map-pick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setActiveInput(btn.getAttribute('data-target'));
+                document.getElementById(activeInputId).focus();
+            });
+        });
+
+        // Update active input when focused
+        document.getElementById('from-input').addEventListener('focus', () => setActiveInput('from-input'));
+        document.getElementById('to-input').addEventListener('focus', () => setActiveInput('to-input'));
+
+        // Handle map clicks (Reverse Geocoding)
+        async function onMapClick(e) {
+            popup
+                .setLatLng(e.latlng)
+                .setContent("Loading address for " + e.latlng.toString() + "...")
+                .openOn(map);
+                
+            try {
+                const response = await fetch(`/api/reverse-geocode?lat=${e.latlng.lat}&lng=${e.latlng.lng}`);
+                const data = await response.json();
+                
+                const activeInput = document.getElementById(activeInputId);
+                activeInput.value = data.address;
+                activeInput.focus();
+
+                popup.setContent(`<strong>Address:</strong> ${data.address}<br><em>(Stub API response)</em>`);
+            } catch (error) {
+                popup.setContent("Error fetching address API.");
+                console.error("Reverse geocoding error:", error);
+            }
+        }
         map.on('click', onMapClick);
+
+        // Handle search input typing (Search/Forward Geocoding)
+        let searchTimeout;
+        async function handleSearchInput(e) {
+            const query = e.target.value;
+            if (!query) return;
+
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                console.log(`Searching for: ${query}`);
+                try {
+                    const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    console.log("Search API response:", data);
+                    // For now just log it, later we can display suggestions below the input
+                    // Or if we have results, we could place a marker on the map:
+                    if (data.results && data.results.length > 0) {
+                        const firstResult = data.results[0];
+                        L.marker([firstResult.lat, firstResult.lng]).addTo(map)
+                            .bindPopup(`Search Result: ${firstResult.name}`).openPopup();
+                        map.setView([firstResult.lat, firstResult.lng], 13);
+                    }
+                } catch (error) {
+                    console.error("Search error:", error);
+                }
+            }, 500); // 500ms debounce
+        }
+
+        document.getElementById('from-input').addEventListener('input', handleSearchInput);
+        document.getElementById('to-input').addEventListener('input', handleSearchInput);
     </script>
 </body>
 </html>

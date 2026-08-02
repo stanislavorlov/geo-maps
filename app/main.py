@@ -14,6 +14,25 @@ async def root(request: Request):
         request=request, name="index.html", context={"app": app}
     )
 
-@app.get("/items/{item_id}")
-async def get_item(item_id: int):
-    return {"item_id": item_id}
+@app.get("/api/search")
+async def search(query: str):
+    # TODO: Implement search logic (e.g. forward geocoding or autocomplete)
+    # Return a stub response for now
+    return {
+        "status": "success",
+        "query": query,
+        "results": [
+            {"name": f"Stub result for '{query}'", "lat": 51.505, "lng": -0.09}
+        ]
+    }
+
+@app.get("/api/reverse-geocode")
+async def reverse_geocode(lat: float, lng: float):
+    # TODO: Implement reverse geocoding logic based on lat and lng
+    # Return a stub response for now
+    return {
+        "status": "success",
+        "lat": lat,
+        "lng": lng,
+        "address": f"Stub address for {lat}, {lng}"
+    }
