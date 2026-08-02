@@ -3,6 +3,9 @@ from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
+from models.geocode_model import ReverseGeocodeRequest
+from models.search_model import SearchRequest
+
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="app/templates"), name="static")
@@ -14,22 +17,24 @@ async def root(request: Request):
         request=request, name="index.html", context={"app": app}
     )
 
-@app.get("/api/search")
-async def search(query: str):
+@app.post("/api/search")
+async def search(request: SearchRequest):
     # TODO: Implement search logic (e.g. forward geocoding or autocomplete)
     # Return a stub response for now
     return {
         "status": "success",
-        "query": query,
+        "query": request.query,
         "results": [
-            {"name": f"Stub result for '{query}'", "lat": 51.505, "lng": -0.09}
+            {"name": f"Stub result for '{request.query}'", "lat": 51.505, "lng": -0.09}
         ]
     }
 
-@app.get("/api/reverse-geocode")
-async def reverse_geocode(lat: float, lng: float):
+@app.post("/api/reverse-geocode")
+async def reverse_geocode(request: ReverseGeocodeRequest):
     # TODO: Implement reverse geocoding logic based on lat and lng
     # Return a stub response for now
+    lat, lng = request.lat, request.lng
+
     return {
         "status": "success",
         "lat": lat,
