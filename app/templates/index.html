@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Geo Maps</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          crossorigin=""/>
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-            crossorigin=""></script>
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        #map { height: 100vh; width: 100vw; }
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+
         .search-panel {
             position: absolute;
             top: 20px;
@@ -20,19 +30,22 @@
             background: white;
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             width: 320px;
         }
+
         .search-input-group {
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
+
         .input-wrapper {
             display: flex;
             align-items: center;
             position: relative;
         }
+
         .search-input-group input {
             width: 100%;
             padding: 12px 40px 12px 16px;
@@ -43,9 +56,11 @@
             outline: none;
             transition: border-color 0.2s;
         }
+
         .search-input-group input:focus {
             border-color: #1a73e8;
         }
+
         .map-pick-btn {
             position: absolute;
             right: 8px;
@@ -61,16 +76,44 @@
             align-items: center;
             justify-content: center;
         }
+
         .map-pick-btn:hover {
             opacity: 0.8;
             background: #f1f3f4;
         }
+
         .map-pick-btn.active {
             opacity: 1;
             background: #e8f0fe;
         }
+
+        .find-route-btn {
+            margin-top: 15px;
+            width: 100%;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);
+        }
+
+        .find-route-btn:hover {
+            background-color: #1557b0;
+            box-shadow: 0 4px 8px rgba(26, 115, 232, 0.4);
+        }
+
+        .find-route-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 1px 2px rgba(26, 115, 232, 0.2);
+        }
     </style>
 </head>
+
 <body>
     <div class="search-panel">
         <div class="search-input-group">
@@ -83,6 +126,7 @@
                 <button class="map-pick-btn" data-target="to-input" title="Choose on map">📍</button>
             </div>
         </div>
+        <button id="find-route-btn" class="find-route-btn">Find Route</button>
     </div>
     <div id="map"></div>
 
@@ -94,9 +138,9 @@
         }).addTo(map);
 
         var popup = L.popup();
-        
+
         let activeInputId = 'from-input';
-        
+
         function setActiveInput(inputId) {
             activeInputId = inputId;
             document.querySelectorAll('.map-pick-btn').forEach(b => {
@@ -116,9 +160,48 @@
             });
         });
 
+        async function searchRoute() {
+            const fromInput = document.getElementById('from-input');
+            const toInput = document.getElementById('to-input');
+
+            const fromLat = fromInput.dataset.lat;
+            const fromLng = fromInput.dataset.lng;
+            const toLat = toInput.dataset.lat;
+            const toLng = toInput.dataset.lng;
+
+            if (!fromLat || !fromLng || !toLat || !toLng) {
+                alert("Please select both starting and destination points on the map.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/find_route`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ from_: { lat: fromLat, lng: fromLng }, to: { lat: toLat, lng: toLng } })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.route) {
+                        L.polyline(data.route, { color: 'blue', weight: 5 }).addTo(map);
+                        map.fitBounds(L.latLngBounds(data.route));
+                    } else {
+                        alert("No route found between the selected points.");
+                    }
+                } else {
+                    alert("Error finding route.");
+                }
+            } catch (error) {
+                console.error("Error finding route:", error);
+                alert("Error finding route.");
+            }
+        }
+
         // Update active input when focused
         document.getElementById('from-input').addEventListener('focus', () => setActiveInput('from-input'));
         document.getElementById('to-input').addEventListener('focus', () => setActiveInput('to-input'));
+        document.getElementById('find-route-btn').addEventListener('click', () => searchRoute());
 
         // Handle map clicks (Reverse Geocoding)
         async function onMapClick(e) {
@@ -126,7 +209,7 @@
                 .setLatLng(e.latlng)
                 .setContent("Loading address for " + e.latlng.toString() + "...")
                 .openOn(map);
-                
+
             try {
                 const response = await fetch(`/api/reverse-geocode`, {
                     method: 'POST',
@@ -134,7 +217,7 @@
                     body: JSON.stringify({ lat: e.latlng.lat, lng: e.latlng.lng })
                 });
                 const data = await response.json();
-                
+
                 const activeInput = document.getElementById(activeInputId);
                 activeInput.value = data.address;
                 activeInput.focus();
@@ -182,4 +265,5 @@
         document.getElementById('to-input').addEventListener('input', handleSearchInput);
     </script>
 </body>
+
 </html>

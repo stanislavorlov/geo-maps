@@ -1,0 +1,19 @@
+UI:
+1. Add a "Find route" button on UI or another trigger
+2. Add new endpoint POST /api/route accepting both points, which will call a router (e.g. OSRM) to find a route between two points
+3. Once a response is received, the UI will draw a polyline for the route on the Leaflet map (L.polyline)
+
+Backend (API):
+4. API finds the nearest Nodes IDs in the database for start/end
+5. Pass those points into Graph algorithm (A* or Dijkstra) to find the shortest path (in distance, not time) among all existing graph nodes
+
+Graph (In-memory):
+6. Build Graph (Nodes and Edges) once when the application starts (or based on some trigger) by reading from the database.
+7. Graph executes Dijkstra's algorithm or A*
+8. It will traverse the edges using distance property to find the shortest path (in distance, not time) among all existing graph nodes
+9. Once the path is found, return the list of coordinates (lat, lon) to the UI
+
+If data not in database:
+10. DB distance_centroid should handle it automatically (closest existing nodes)
+11. The API should have a maximum distance it can search in the database (e.g. 200m)
+12. If too far, the UI can display a pop-up saying "Route too long, please select points closer to each other" and also clear the map route.

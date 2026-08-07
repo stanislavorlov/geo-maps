@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from database.location_repository import LocationRepository
 from database.database import get_db
 from models.geocode_model import ReverseGeocodeRequest
-from models.search_model import SearchRequest
+from models.search_model import SearchRequest, RouteRequest
 from database.database import engine, Base
 import database.models  # Import models to ensure they are registered with Base
 import logging
@@ -93,3 +93,24 @@ async def reverse_geocode(request: ReverseGeocodeRequest, db: AsyncSession = Dep
             "description": location.description if location else None
         }
     }
+
+async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
+    # TODO: Implement route finding logic using Dijkstra's algorithm or A*
+    # Return a stub response for now
+    return {
+        "status": "success",
+        "route": [
+            # it should be just an array of points
+            [ request.from_.lat, request.from_.lng ],
+            [ request.to.lat, request.to.lng ]
+            # ...
+        ]
+    }
+
+# var latlngs = [
+#     [45.51, -122.68],
+#     [37.77, -122.43],
+#     [34.04, -118.2]
+# ];
+#
+# var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);
