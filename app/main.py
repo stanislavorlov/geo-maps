@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import FastAPI, Request, Response
 from fastapi.params import Depends
 from starlette.responses import HTMLResponse
@@ -20,14 +22,31 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+async def async_graph_worker_loop():
+    try:
+        # ToDo:
+        print("Simulate graph loading from a file...")
+    except asyncio.CancelledError:
+        print("Graph loading caught cancellation. Cleaning up...")
+        raise
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.debug("Application starting up...")
+
+    worker_task = asyncio.create_task(async_graph_worker_loop())
+
     # Create all tables in the database
     async with engine.begin() as conn:
         # Note: In production you would probably use Alembic instead of this
         await conn.run_sync(Base.metadata.create_all)
     yield
-    # Clean up (if needed)
+    logger.debug("Application shutting down...")
+    worker_task.cancel()
+    try:
+        await worker_task
+    except asyncio.CancelledError:
+        print("Worker successfully stopped.")
     await engine.dispose()
 
 app = FastAPI(lifespan=lifespan)
