@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from models.geocode_model import ReverseGeocodeRequest
+from .geocode_model import ReverseGeocodeRequest
 
 
 class SearchRequest(BaseModel):
