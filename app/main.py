@@ -135,6 +135,7 @@ async def reverse_geocode(request: ReverseGeocodeRequest, db: AsyncSession = Dep
         }
     }
 
+@app.post("/api/find_route")
 async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
     # TODO: Implement route finding logic using Dijkstra's algorithm or A*
     # Return a stub response for now

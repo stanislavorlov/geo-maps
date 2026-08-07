@@ -220,6 +220,8 @@
 
                 const activeInput = document.getElementById(activeInputId);
                 activeInput.value = data.address;
+                activeInput.dataset.lat = e.latlng.lat;
+                activeInput.dataset.lng = e.latlng.lng;
                 activeInput.focus();
 
                 popup.setContent(`<strong>Address:</strong> ${data.address}<br><em>(Stub API response)</em>`);
@@ -254,6 +256,10 @@
                         L.marker([firstResult.lat, firstResult.lng]).addTo(map)
                             .bindPopup(`Search Result: ${firstResult.name}`).openPopup();
                         map.setView([firstResult.lat, firstResult.lng], 13);
+
+                        e.target.dataset.lat = firstResult.lat;
+                        e.target.dataset.lng = firstResult.lng;
+                        e.target.value = firstResult.address;
                     }
                 } catch (error) {
                     console.error("Search error:", error);
