@@ -33,28 +33,36 @@ class Edge:
 
 class Graph:
     def __init__(self, nodes: List[Node], edges: List[Edge]):
-        self.nodes = nodes
-        self.edges = edges
+        # Normalize inputs to dataclass instances if they are dicts
+        self.nodes = [Node(**n) if isinstance(n, dict) else n for n in nodes]
+        self.edges = [
+            Edge(from_id=e["from"], to_id=e["to"], distance=e["distance"], speed=e.get("speed"), road_type=e["road_type"])
+            if isinstance(e, dict) else e
+            for e in edges
+        ]
 
         self.graph = {
-            "nodes": nodes,
-            "edges": edges
+            "nodes": self.nodes,
+            "edges": self.edges
         }
 
     def save_file(self, filename: str):
+        data = {
+            "nodes": [n.to_dict() for n in self.nodes],
+            "edges": [e.to_dict() for e in self.edges]
+        }
         with open(filename, "w") as f:
-            json.dump(self.graph, f, indent=4)
+            json.dump(data, f, indent=4)
 
     def load_file(self, filename: str):
         with open(filename, "r") as f:
-            self.graph = json.load(f)
-
-test = Graph(
-    nodes=[{'id': 108395, 'lat': 51.5230075, 'lon': -0.1022238}],
-    edges=[{'from': 18691639, 'to': 18691141, 'distance': 24.68, 'speed': 20, 'road_type': 'residential'}]
-)
-
-test.save_file("test.json")
-test.load_file("test.json")
-
-print(test.graph)
+            data = json.load(f)
+            self.nodes = [Node(**n) for n in data.get("nodes", [])]
+            self.edges = [
+                Edge(from_id=e["from"], to_id=e["to"], distance=e["distance"], speed=e.get("speed"), road_type=e["road_type"])
+                for e in data.get("edges", [])
+            ]
+            self.graph = {
+                "nodes": self.nodes,
+                "edges": self.edges
+            }
