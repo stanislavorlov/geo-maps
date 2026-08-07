@@ -1,9 +1,11 @@
 from fastapi import FastAPI, Request, Response
+from fastapi.params import Depends
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from contextlib import asynccontextmanager
-
+from sqlalchemy.ext.asyncio.session import AsyncSession
+from database.database import get_db
 from models.geocode_model import ReverseGeocodeRequest
 from models.search_model import SearchRequest
 from database.database import engine, Base
@@ -31,7 +33,7 @@ async def root(request: Request):
     )
 
 @app.post("/api/search")
-async def search(request: SearchRequest):
+async def search(request: SearchRequest, db: AsyncSession = Depends(get_db)):
     # TODO: Implement search logic (e.g. forward geocoding or autocomplete)
     # Return a stub response for now
     return {
@@ -43,7 +45,7 @@ async def search(request: SearchRequest):
     }
 
 @app.post("/api/reverse-geocode")
-async def reverse_geocode(request: ReverseGeocodeRequest):
+async def reverse_geocode(request: ReverseGeocodeRequest, db: AsyncSession = Depends(get_db)):
     # TODO: Implement reverse geocoding logic based on lat and lng
     # Return a stub response for now
     lat, lng = request.lat, request.lng
