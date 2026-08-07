@@ -8,6 +8,8 @@ class Node:
     id: int
     lat: float
     lon: float
+    name: Optional[str] = None
+    description: Optional[str] = None
 
     def to_dict(self) -> dict:
         return asdict(self)

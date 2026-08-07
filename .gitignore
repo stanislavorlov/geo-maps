@@ -218,4 +218,4 @@ __marimo__/
 .streamlit/secrets.toml
 
 .idea/
-.DS_Store
+*/postgres_data/

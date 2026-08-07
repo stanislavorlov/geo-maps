@@ -3,7 +3,11 @@ import math
 import re
 from typing import Dict, List, Optional, Tuple
 from app.graph.graph import Node, Edge
-
+import time
+from app.database.database import engine
+from app.database.models import Road, Location
+from sqlalchemy import insert
+import asyncio
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
@@ -46,12 +50,23 @@ def parse_osm_to_graph(file_path: str) -> Tuple[Dict[int, Node], List[Edge]]:
         print("Using osmiter to parse PBF file...")
         # Since osmiter streams elements, and nodes are ordered before ways in PBF files,
         # we can build the node map and generate edges in a single pass.
+        display_node = False
+        display_edge = False
         for elem in osmiter.iter_from_osm(file_path):
             el_type = elem.get("type")
             if el_type == "node":
                 node_id = elem["id"]
-                nodes[node_id] = Node(id=node_id, lat=elem["lat"], lon=elem["lon"])
+                tags = elem.get("tag", {})
+                name = tags.get("name")
+                description = tags.get("description")
+                nodes[node_id] = Node(id=node_id, lat=elem["lat"], lon=elem["lon"], name=name, description=description)
+                if not display_node:
+                    display_node = True
+                    print(elem)
             elif el_type == "way":
+                if not display_edge:
+                    display_edge = True
+                    print(elem)
                 tags = elem.get("tag", {})
                 road_type = tags.get("highway")
                 if not road_type:
@@ -102,7 +117,12 @@ def parse_osm_to_graph(file_path: str) -> Tuple[Dict[int, Node], List[Edge]]:
             node_id = int(node_elem.get("id"))
             lat = float(node_elem.get("lat"))
             lon = float(node_elem.get("lon"))
-            nodes[node_id] = Node(id=node_id, lat=lat, lon=lon)
+            
+            tags = {tag.get("k"): tag.get("v") for tag in node_elem.findall("tag")}
+            name = tags.get("name")
+            description = tags.get("description")
+            
+            nodes[node_id] = Node(id=node_id, lat=lat, lon=lon, name=name, description=description)
 
         # 2. Parse all ways that represent roads (have a 'highway' tag)
         for way_elem in root.findall("way"):
@@ -166,12 +186,17 @@ if __name__ == "__main__":
     london_large.osm - 2,3 MB
     '''
     #osm_file = "map.osm" if len(sys.argv) < 2 else sys.argv[1]
-    osm_file = "../maps_osm_pbf/map.osm"
-    #osm_file = "greater-london-latest.osm.pbf"
+    #osm_file = "../maps_osm_pbf/map.osm"
+    osm_file = "../maps_osm_pbf/greater-london-latest.osm.pbf"
     print(f"Parsing '{osm_file}'...")
+
+    start_time = time.perf_counter()
     try:
         nodes, edges = parse_osm_to_graph(osm_file)
-        print(f"Parsing complete!")
+        end_time = time.perf_counter()
+        execution_time = end_time - start_time
+
+        print(f"Parsing complete in : {execution_time:.6f} seconds")
         print(f"Total Nodes: {len(nodes)}")
         print(f"Total Edges: {len(edges)}")
         
@@ -181,5 +206,50 @@ if __name__ == "__main__":
             print(f"\nSample Node:\n  {nodes[sample_node_id].to_dict()}")
         if edges:
             print(f"\nSample Edge:\n  {edges[0].to_dict()}")
+            
+        async def insert_data(nodes: Dict[int, Node], edges: List[Edge]):
+            print("\nStarting database insertion...")
+            start_db_time = time.perf_counter()
+            
+            # We can insert nodes and edges in batches
+            batch_size = 1000
+            
+            async with engine.begin() as conn:
+                # 1. Insert Nodes as Locations
+                print(f"Inserting {len(nodes)} nodes...")
+                node_list = list(nodes.values())
+                for i in range(0, len(node_list), batch_size):
+                    batch = node_list[i:i+batch_size]
+                    values = [{
+                        'id': n.id,
+                        'name': n.name,
+                        'description': n.description,
+                        'geom': f"SRID=4326;POINT({n.lon} {n.lat})"
+                    } for n in batch]
+                    
+                    await conn.execute(insert(Location).values(values))
+                    print(f"Inserted nodes batch {i // batch_size + 1}/{(len(node_list) + batch_size - 1) // batch_size} ({len(values)} nodes)")
+                    
+                # 2. Insert Edges as Roads
+                print(f"\nInserting {len(edges)} edges...")
+                for i in range(0, len(edges), batch_size):
+                    batch = edges[i:i+batch_size]
+                    values = [{
+                        'from_id': e.from_id,
+                        'to_id': e.to_id,
+                        'distance': e.distance,
+                        'speed': e.speed,
+                        'road_type': e.road_type
+                    } for e in batch]
+                    
+                    await conn.execute(insert(Road).values(values))
+                    print(f"Inserted edges batch {i // batch_size + 1}/{(len(edges) + batch_size - 1) // batch_size} ({len(values)} edges)")
+                    
+            end_db_time = time.perf_counter()
+            print(f"Database insertion complete in : {end_db_time - start_db_time:.6f} seconds")        # 852.121007 seconds
+
+        # Run insertion asynchronously
+        asyncio.run(insert_data(nodes, edges))
+
     except Exception as e:
         print(f"Error: {e}")
