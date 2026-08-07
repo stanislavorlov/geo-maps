@@ -1,1 +1,2 @@
 greater-london-latest.osm.pbf filter=lfs diff=lfs merge=lfs -text
+graph.json.gz filter=lfs diff=lfs merge=lfs -text

@@ -30,10 +30,15 @@ async def async_graph_worker_loop(app: FastAPI):
         def load_graph():
             g = Graph(nodes=[], edges=[])
             try:
-                g.load_file("graph.json")
+                try:
+                    g.load_file("graph.json.gz")
+                    logger.info("Loaded graph from graph.json.gz")
+                except FileNotFoundError:
+                    g.load_file("graph.json")
+                    logger.info("Loaded graph from graph.json")
                 return g
             except FileNotFoundError:
-                logger.warning("graph.json not found. Make sure to generate it using the parser.")
+                logger.warning("Neither graph.json.gz nor graph.json was found. Make sure to generate it using the parser.")
                 return g
 
         # Load graph in a separate thread to keep event loop unblocked

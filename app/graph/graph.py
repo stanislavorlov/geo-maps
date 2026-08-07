@@ -1,4 +1,5 @@
 import json
+import gzip
 from dataclasses import dataclass, asdict
 from typing import Optional, List
 
@@ -51,18 +52,26 @@ class Graph:
             "nodes": [n.to_dict() for n in self.nodes],
             "edges": [e.to_dict() for e in self.edges]
         }
-        with open(filename, "w") as f:
-            json.dump(data, f, indent=4)
+        if filename.endswith(".gz"):
+            with gzip.open(filename, "wt", encoding="utf-8") as f:
+                json.dump(data, f)
+        else:
+            with open(filename, "w") as f:
+                json.dump(data, f, indent=4)
 
     def load_file(self, filename: str):
-        with open(filename, "r") as f:
-            data = json.load(f)
-            self.nodes = [Node(**n) for n in data.get("nodes", [])]
-            self.edges = [
-                Edge(from_id=e["from"], to_id=e["to"], distance=e["distance"], speed=e.get("speed"), road_type=e["road_type"])
-                for e in data.get("edges", [])
-            ]
-            self.graph = {
-                "nodes": self.nodes,
-                "edges": self.edges
-            }
+        if filename.endswith(".gz"):
+            with gzip.open(filename, "rt", encoding="utf-8") as f:
+                data = json.load(f)
+        else:
+            with open(filename, "r") as f:
+                data = json.load(f)
+        self.nodes = [Node(**n) for n in data.get("nodes", [])]
+        self.edges = [
+            Edge(from_id=e["from"], to_id=e["to"], distance=e["distance"], speed=e.get("speed"), road_type=e["road_type"])
+            for e in data.get("edges", [])
+        ]
+        self.graph = {
+            "nodes": self.nodes,
+            "edges": self.edges
+        }
