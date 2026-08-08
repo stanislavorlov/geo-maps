@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from database.location_repository import LocationRepository
 from database.database import get_db
+from database.route_repository import RouteRepository
 from models.geocode_model import ReverseGeocodeRequest
 from models.search_model import SearchRequest, RouteRequest
 from database.database import engine, Base
@@ -138,14 +139,19 @@ async def reverse_geocode(request: ReverseGeocodeRequest, db: AsyncSession = Dep
 
 @app.post("/api/find_route")
 async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
-    # TODO: Implement route finding logic using Dijkstra's algorithm or A*
-    # Return a stub response for now
-
-    repository = LocationRepository(db=db)
+    repository = RouteRepository(db=db)
 
     query_result = await repository.query_route(request.from_, request.to)
 
     logger.info(f"Query result count: {len(query_result)}")
+
+    '''
+    TODO:
+    Database already returns a set of points between 2 coordinates (it should also respect roads)
+    Based on returned dataset, app should build a graph and apply some algorithm (Dijkstra's algorithm or A*) for finding routes
+    Graph should involve the roads (edges) as well, so need to find out on how to query those as well
+    Based on algorithm result, return the shortest path
+    '''
 
     return {
         "status": "success",
