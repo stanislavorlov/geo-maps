@@ -25,18 +25,18 @@ class RouteRepository:
         )
 
         # Create aliases to join Location twice
-        LocFrom = aliased(Location)
-        LocTo = aliased(Location)
+        loc_from = aliased(Location)
+        loc_to = aliased(Location)
 
         # ST_DWithin is index-accelerated and avoids constructing buffer geometries
         stmt = (
-            select(Road, LocFrom, LocTo)
-            .join(LocFrom, Road.from_id == LocFrom.id)
-            .join(LocTo, Road.to_id == LocTo.id)
+            select(Road, loc_from, loc_to)
+            .join(loc_from, Road.from_id == loc_from.id)
+            .join(loc_to, Road.to_id == loc_to.id)
             .where(
                 and_(
-                    geo_func.ST_DWithin(LocFrom.geom, route_line, buffer_degree),
-                    geo_func.ST_DWithin(LocTo.geom, route_line, buffer_degree)
+                    geo_func.ST_DWithin(loc_from.geom, route_line, buffer_degree),
+                    geo_func.ST_DWithin(loc_to.geom, route_line, buffer_degree)
                 )
             )
         )

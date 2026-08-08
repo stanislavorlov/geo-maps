@@ -14,7 +14,7 @@ from models.search_model import SearchRequest, RouteRequest
 from database.database import engine, Base
 import database.models  # Import models to ensure they are registered with Base
 import logging
-from graph.graph import Graph
+from graph.graph import Graph, load_graph_from_db
 from geoalchemy2.shape import to_shape
 
 # configure logging
@@ -150,6 +150,9 @@ async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
     Graph should involve the roads (edges) as well, so need to find out on how to query those as well
     Based on algorithm result, return the shortest path
     '''
+
+    map_graph = load_graph_from_db(query_result)
+    logger.debug("Graph loaded based on DB result")
 
     # Build a set of unique locations from the queried edges
     unique_locations = set()
