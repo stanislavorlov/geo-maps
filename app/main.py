@@ -1,5 +1,4 @@
 import asyncio
-
 from fastapi import FastAPI, Request, Response
 from fastapi.params import Depends
 from starlette.responses import HTMLResponse
@@ -15,6 +14,8 @@ from models.search_model import SearchRequest, RouteRequest
 from database.database import engine, Base
 import database.models  # Import models to ensure they are registered with Base
 import logging
+from graph.graph import Graph
+from geoalchemy2.shape import to_shape
 
 # configure logging
 logging.basicConfig(
@@ -22,9 +23,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
-
-from graph.graph import Graph
-from geoalchemy2.shape import to_shape
 
 async def async_graph_worker_loop(app: FastAPI):
     try:
@@ -153,11 +151,17 @@ async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
     Based on algorithm result, return the shortest path
     '''
 
+    # Build a set of unique locations from the queried edges
+    unique_locations = set()
+    for road, loc_from, loc_to in query_result:
+        unique_locations.add(loc_from)
+        unique_locations.add(loc_to)
+
     return {
         "status": "success",
         "route": [
             [to_shape(loc.geom).y, to_shape(loc.geom).x]
-            for loc in query_result
+            for loc in unique_locations
         ]
     }
 

@@ -1,7 +1,8 @@
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, and_
+from sqlalchemy.orm import aliased
 from geoalchemy2 import functions as geo_func
-from .models import Location
+from .models import Location, Road
 from models.geocode_model import ReverseGeocodeRequest
 
 class RouteRepository:
@@ -13,7 +14,7 @@ class RouteRepository:
         start: ReverseGeocodeRequest,
         end: ReverseGeocodeRequest,
         buffer_degree: float = 0.01  # Default to ~1.1km instead of 5.5km
-    ) -> list[Location]:
+    ) -> list[tuple[Road, Location, Location]]:
         point_a_wkt = f"POINT({start.lng} {start.lat})"
         point_b_wkt = f"POINT({end.lng} {end.lat})"
 
@@ -23,14 +24,23 @@ class RouteRepository:
             geo_func.ST_GeomFromText(point_b_wkt, 4326),
         )
 
+        # Create aliases to join Location twice
+        LocFrom = aliased(Location)
+        LocTo = aliased(Location)
+
         # ST_DWithin is index-accelerated and avoids constructing buffer geometries
-        stmt = select(Location).where(
-            geo_func.ST_DWithin(
-                Location.geom,
-                route_line,
-                buffer_degree
+        stmt = (
+            select(Road, LocFrom, LocTo)
+            .join(LocFrom, Road.from_id == LocFrom.id)
+            .join(LocTo, Road.to_id == LocTo.id)
+            .where(
+                and_(
+                    geo_func.ST_DWithin(LocFrom.geom, route_line, buffer_degree),
+                    geo_func.ST_DWithin(LocTo.geom, route_line, buffer_degree)
+                )
             )
         )
 
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        # result contains rows of (Road, LocFrom, LocTo)
+        return result.all()
