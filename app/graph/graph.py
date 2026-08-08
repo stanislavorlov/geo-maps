@@ -4,6 +4,19 @@ from dataclasses import dataclass, asdict
 from typing import Optional, List
 
 
+# class Graph:
+#     nodes
+#     adjacency_list
+
+# Each node stores outgoing edges.
+# 1
+#     -> 2
+#     -> 5
+#
+# 2
+#     -> 3
+#     -> 7
+
 @dataclass
 class Node:
     id: int

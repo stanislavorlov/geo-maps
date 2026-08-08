@@ -185,6 +185,7 @@
                     const data = await response.json();
                     if (data.route) {
 
+                        // Approach 1
                         // var latlngs = [
                         //     [45.51, -122.68],
                         //     [37.77, -122.43],
@@ -194,7 +195,13 @@
                         // var polyline = L.polyline(latlngs, { color: 'red' }).addTo(map);
 
                         // L.polyline(data.route, { color: 'blue', weight: 5 }).addTo(map);
-                        map.fitBounds(L.latLngBounds(data.route));
+
+                        // Approach 2
+                        //map.fitBounds(L.latLngBounds(data.route));
+
+                        // Approach 3
+                        var routeLine = L.polyline(data.route, { color: 'blue', weight: 5 }).addTo(map);
+                        map.fitBounds(routeLine.getBounds());
                     } else {
                         alert("No route found between the selected points.");
                     }

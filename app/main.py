@@ -23,6 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 from graph.graph import Graph
+from geoalchemy2.shape import to_shape
 
 async def async_graph_worker_loop(app: FastAPI):
     try:
@@ -139,15 +140,26 @@ async def reverse_geocode(request: ReverseGeocodeRequest, db: AsyncSession = Dep
 async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
     # TODO: Implement route finding logic using Dijkstra's algorithm or A*
     # Return a stub response for now
+
+    repository = LocationRepository(db=db)
+
+    query_result = await repository.query_route(request.from_, request.to)
+
+    logger.info(f"Query result count: {len(query_result)}")
+
     return {
         "status": "success",
         "route": [
-            # it should be just an array of points
-            [ request.from_.lat, request.from_.lng ],
-            [ request.to.lat, request.to.lng ]
-            # ...
+            [to_shape(loc.geom).y, to_shape(loc.geom).x]
+            for loc in query_result
         ]
     }
+
+    # {
+    #     "distance": 3500,
+    #     "time": 240,
+    #     "path": [...]
+    # }
 
 # var latlngs = [
 #     [45.51, -122.68],
