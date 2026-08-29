@@ -209,7 +209,7 @@ async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
 
     return {
         "status": "success",
-        "distance": total_distance,
+        "distance": total_distance,     # in meters
         "time": total_time,
         "path": output,
     }

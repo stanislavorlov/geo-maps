@@ -1,11 +1,5 @@
-# src point
-# adjacency list
 import heapq
 from collections import defaultdict
-from typing import List, Tuple
-
-from sqlalchemy.sql.schema import Column
-
 from database.models import Road, Location
 
 # For shortest distance:
