@@ -184,23 +184,16 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.path) {
-
-                        // Approach 1
-                        // var latlngs = [
-                        //     [45.51, -122.68],
-                        //     [37.77, -122.43],
-                        //     [34.04, -118.2]
-                        // ];
-
-                        // var polyline = L.polyline(latlngs, { color: 'red' }).addTo(map);
-
-                        // L.polyline(data.path, { color: 'blue', weight: 5 }).addTo(map);
-
-                        // Approach 2
-                        //map.fitBounds(L.latLngBounds(data.path));
-
-                        // Approach 3
-                        var routeLine = L.polyline(data.path, { color: 'blue', weight: 5 }).addTo(map);
+                        var routeLine = L.polyline(data.path, { 
+                            color: 'blue', 
+                            weight: 5,
+                            routeName: "Scenic Highway Path"
+                        })
+                        .bindTooltip(`${data.distance.toFixed(0)} · ${data.time.toFixed(0)}`, {
+                            permanent: true,
+                            direction: 'center'
+                        })
+                        .addTo(map);
                         map.fitBounds(routeLine.getBounds());
                     } else {
                         alert("No route found between the selected points.");
