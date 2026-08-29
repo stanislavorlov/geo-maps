@@ -23,6 +23,61 @@ html {
     width: 320px;
 }
 
+.travel-mode-group {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.travel-mode-group input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.travel-mode-group label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 2px 6px;
+    border-radius: 8px;
+    color: #5f6368;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.travel-mode-group label svg {
+    width: 22px;
+    height: 22px;
+}
+
+.travel-mode-group label span {
+    font-size: 11px;
+    line-height: 1;
+}
+
+.travel-mode-group label:hover {
+    background: #f1f3f4;
+}
+
+.travel-mode-group input[type="radio"]:checked + label {
+    background: #e8f0fe;
+    color: #1a73e8;
+}
+
+.travel-mode-group input[type="radio"]:checked + label span {
+    font-weight: 600;
+}
+
+.travel-mode-group input[type="radio"]:focus-visible + label {
+    box-shadow: inset 0 0 0 2px #1a73e8;
+}
+
 .search-input-group {
     display: flex;
     flex-direction: column;
