@@ -1,6 +1,5 @@
 import asyncio
 from math import cos, radians
-
 from fastapi import FastAPI, Request, Response
 from fastapi.params import Depends
 from starlette.responses import HTMLResponse
@@ -16,9 +15,8 @@ from models.search_model import SearchRequest, RouteRequest
 from database.database import engine, Base
 import database.models  # Import models to ensure they are registered with Base
 import logging
-from graph.graph import Graph, load_graph_from_db
+from graph.graph import Graph
 from geoalchemy2.shape import to_shape
-
 from routing.dijkstra_routing import shortest_path_map
 
 # configure logging
@@ -102,9 +100,6 @@ async def search(request: SearchRequest, db: AsyncSession = Depends(get_db)):
 
 @app.post("/api/reverse-geocode")
 async def reverse_geocode(request: ReverseGeocodeRequest, db: AsyncSession = Depends(get_db)):
-    # TODO: Implement reverse geocoding logic based on lat and lng
-    # Return a stub response for now
-
     repository = LocationRepository(db=db)
 
     lat, lng = request.lat, request.lng
@@ -171,16 +166,16 @@ async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
     '''
 
     # Collect the unique graph nodes returned by the query
-    location_set = set()
+    locations: set[database.models.Location] = set()
     for _road, loc_from, loc_to in query_result:
-        location_set.add(loc_from)
-        location_set.add(loc_to)
+        locations.add(loc_from)
+        locations.add(loc_to)
 
     # Snap request coordinates to the nearest graph node.
     # An exact coordinate match will almost never happen for a user click,
     # so we pick the closest Location instead.
-    location_from = find_nearest_location(location_set, request.from_.lat, request.from_.lng)
-    location_to = find_nearest_location(location_set, request.to.lat, request.to.lng)
+    location_from = find_nearest_location(locations, request.from_.lat, request.from_.lng)
+    location_to = find_nearest_location(locations, request.to.lat, request.to.lng)
 
     if location_from is None or location_to is None:
         logger.warning("No graph nodes found near the requested coordinates")
@@ -218,25 +213,3 @@ async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
         "time": total_time,
         "path": output,
     }
-
-    # return {
-    #     "status": "success",
-    #     "route": [
-    #         [to_shape(loc.geom).y, to_shape(loc.geom).x]
-    #         for loc in unique_locations
-    #     ]
-    # }
-
-    # {
-    #     "distance": 3500,
-    #     "time": 240,
-    #     "path": [...]
-    # }
-
-# var latlngs = [
-#     [45.51, -122.68],
-#     [37.77, -122.43],
-#     [34.04, -118.2]
-# ];
-#
-# var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);
