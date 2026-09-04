@@ -1,5 +1,5 @@
 import unittest
-from graph.graph import Graph, Node, Edge
+from app.graph.graph import Graph, Node, Edge
 from routing_algorithms.dijkstra_routing import DijkstraRoutingAlgorithm, DEFAULT_SPEED
 from routing_algorithms.routing_factory import get_routing_algorithm
 from models.search_model import RouteRequest

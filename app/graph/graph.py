@@ -1,6 +1,7 @@
 import math
 from dataclasses import dataclass, asdict
 from typing import Optional
+from scipy.spatial import cKDTree
 
 
 @dataclass
@@ -44,22 +45,27 @@ class Graph:
             if edge.from_id in self.adjacency:
                 self.adjacency[edge.from_id].append(edge)
 
+        # Build KDTree for spatial indexing
+        if nodes:
+            self._node_list = list(nodes.values())
+            mean_lat = sum(n.lat for n in self._node_list) / len(self._node_list)
+            self._cos_lat = math.cos(math.radians(mean_lat))
+            points = [[node.lat, node.lon * self._cos_lat] for node in self._node_list]
+            self.kdTree: Optional[cKDTree] = cKDTree(points)
+        else:
+            self._node_list = []
+            self._cos_lat = 1.0
+            self.kdTree = None
+
     def find_nearest_node(self, lat: float, lng: float) -> Optional[Node]:
-        """Find the closest Node to the given (lat, lng) coordinates."""
-        if not self.nodes:
+        """Find the closest Node to the given (lat, lng) coordinates using KDTree."""
+        if not self.nodes or self.kdTree is None:
             return None
 
-        best_node: Optional[Node] = None
-        best_dist = float("inf")
-        lng_scale = math.cos(math.radians(lat))
+        scaled_lng = lng * self._cos_lat
+        _, index = self.kdTree.query([lat, scaled_lng])
 
-        for node in self.nodes.values():
-            d = (node.lat - lat) ** 2 + ((node.lon - lng) * lng_scale) ** 2
-            if d < best_dist:
-                best_dist = d
-                best_node = node
-
-        return best_node
+        return self._node_list[index]
 
     def data_stats(self) -> dict:
         return {

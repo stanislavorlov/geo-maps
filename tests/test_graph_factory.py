@@ -3,7 +3,7 @@ from shapely.geometry import Point
 from geoalchemy2.elements import WKBElement
 
 from database.models import Location, Road
-from graph.graph_factory import GraphFactory
+from app.graph.graph_factory import GraphFactory
 
 
 class TestGraphFactory(unittest.TestCase):
