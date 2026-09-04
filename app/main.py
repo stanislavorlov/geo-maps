@@ -4,7 +4,6 @@ from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
 import database.models  # Import models to ensure they are registered with Base
 from database.database import Base, engine
-from graph.graph import Graph
 from routes import directions, geocoding, pages
 
 # configure logging
