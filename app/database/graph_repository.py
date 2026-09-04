@@ -3,9 +3,10 @@ from sqlalchemy import select, and_
 from sqlalchemy.orm import aliased
 from geoalchemy2 import functions as geo_func
 from graph.graph import Graph
-from graph.graph_factory import build_graph
+from graph.graph_factory import GraphFactory
 from .models import Location, Road
 from models.geocode_model import ReverseGeocodeRequest
+
 
 class GraphRepository:
     def __init__(self, db: AsyncSession):
@@ -15,7 +16,7 @@ class GraphRepository:
         self,
         start: ReverseGeocodeRequest,
         end: ReverseGeocodeRequest,
-        buffer_degree: float = 0.01  # Default to ~1.1km instead of 5.5km
+        buffer_degree: float = 0.01  # Default to ~1.1km
     ) -> Graph:
         point_a_wkt = f"POINT({start.lng} {start.lat})"
         point_b_wkt = f"POINT({end.lng} {end.lat})"
@@ -44,8 +45,6 @@ class GraphRepository:
         )
 
         result = await self.db.execute(stmt)
+        records = result.all()
 
-        return build_graph(result)
-
-        # result contains rows of (Road, LocFrom, LocTo)
-        #return result.all()
+        return GraphFactory.create_from_db_records(records)
