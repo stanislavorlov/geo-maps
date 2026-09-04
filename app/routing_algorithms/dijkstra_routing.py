@@ -1,6 +1,8 @@
 import heapq
-from collections import defaultdict
-from database.models import Road, Location
+from graph.graph import Graph, Node, Edge
+from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm, RouteResult
+
+DEFAULT_SPEED = 30.0  # mph
 
 # For shortest distance:
 # new_distance = distance + road.distance
@@ -11,49 +13,70 @@ from database.models import Road, Location
 # and Dijkstra minimizes:
 # new_distance = distance + road.distance / road.speed
 
-def shortest_path_map(edges: list[tuple[Road, Location, Location]], from_: Location, to_: Location) -> list[Road]:
-    adj_map = defaultdict(list)
+class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
+    def __init__(self, default_speed: float = DEFAULT_SPEED):
+        self.default_speed = default_speed
 
-    for road, src, dst in edges:
-        adj_map[src.id].append((dst.id, road))
+    def find_route(self, graph: Graph, start_node: Node, target_node: Node) -> RouteResult:
+        if start_node.id == target_node.id:
+            return RouteResult(
+                found=True,
+                distance=0.0,
+                time=0.0,
+                path=[[start_node.lat, start_node.lon]],
+                edges=[]
+            )
 
-    distances = {from_.id: 0.0}
-    previous = {}
-    min_heap = [(0.0, from_.id)]
+        distances = {start_node.id: 0.0}
+        previous: dict[int, tuple[int, Edge]] = {}
+        min_heap = [(0.0, start_node.id)]
 
-    while min_heap:
-        distance, current_id = heapq.heappop(min_heap)
+        while min_heap:
+            current_dist, current_id = heapq.heappop(min_heap)
 
-        if distance > distances.get(current_id, float("inf")):
-            continue
+            if current_dist > distances.get(current_id, float("inf")):
+                continue
 
-        if current_id == to_.id:
-            break
+            if current_id == target_node.id:
+                break
 
-        for next_id, road in adj_map[current_id]:
-            new_distance = distance + road.distance
+            for edge in graph.adjacency.get(current_id, []):
+                new_dist = current_dist + edge.distance
 
-            if new_distance < distances.get(next_id, float("inf")):
-                distances[next_id] = new_distance
+                if new_dist < distances.get(edge.to_id, float("inf")):
+                    distances[edge.to_id] = new_dist
+                    previous[edge.to_id] = (current_id, edge)
+                    heapq.heappush(min_heap, (new_dist, edge.to_id))
 
-                previous[next_id] = road
+        if target_node.id not in distances:
+            return RouteResult(found=False)
 
-                heapq.heappush(min_heap, (new_distance, next_id))
+        # Backtrack path
+        edges_path: list[Edge] = []
+        curr_id = target_node.id
+        while curr_id != start_node.id:
+            prev_id, edge = previous[curr_id]
+            edges_path.append(edge)
+            curr_id = prev_id
 
-    if to_.id not in distances:
-        return []
+        edges_path.reverse()
 
-    routes : list[Road] = []
-    current_id = to_.id
+        # Build output coordinates and metrics
+        coordinates: list[list[float]] = [[start_node.lat, start_node.lon]]
+        total_distance = 0.0
+        total_time = 0.0
 
-    while current_id != from_.id:
-        road = previous[current_id]
+        for edge in edges_path:
+            to_node = graph.nodes[edge.to_id]
+            coordinates.append([to_node.lat, to_node.lon])
+            total_distance += edge.distance
+            speed = edge.speed if edge.speed else self.default_speed
+            total_time += edge.distance / speed
 
-        # Return the original Road instances - rebuilding them would lose the id
-        # (and SQLAlchemy models only accept keyword arguments anyway).
-        routes.append(road)
-        current_id = road.from_id
-
-    routes.reverse()
-
-    return routes
+        return RouteResult(
+            found=True,
+            distance=total_distance,
+            time=total_time,
+            path=coordinates,
+            edges=edges_path
+        )
