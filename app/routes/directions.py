@@ -18,17 +18,17 @@ async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
 
     logger.info(f"Fetched graph: {route_graph.data_stats()}")
 
-    location_from = route_graph.find_nearest_node(request.from_.lat, request.from_.lng)
-    location_to = route_graph.find_nearest_node(request.to.lat, request.to.lng)
+    node_from = route_graph.find_nearest_node(request.from_.lat, request.from_.lng)
+    node_to = route_graph.find_nearest_node(request.to.lat, request.to.lng)
 
-    if location_from is None or location_to is None:
+    if node_from is None or node_to is None:
         logger.warning("No graph nodes found near the requested coordinates")
         return {"status": "error", "message": "No roads found near the requested points"}
 
-    logger.info(f"Finding route from node {location_from.id} to node {location_to.id}")
+    logger.info(f"Finding route from node {node_from.id} to node {node_to.id}")
 
     algorithm = get_routing_algorithm(request)
-    result = algorithm.find_route(route_graph, location_from, location_to)
+    result = algorithm.find_route(route_graph, node_from, node_to)
 
     if not result.found:
         logger.warning("No path found between the requested points")
