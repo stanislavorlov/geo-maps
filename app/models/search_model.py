@@ -8,3 +8,5 @@ class SearchRequest(BaseModel):
 class RouteRequest(BaseModel):
     from_: ReverseGeocodeRequest
     to: ReverseGeocodeRequest
+    routeType: str
+    travelMode: str

@@ -1,14 +1,13 @@
 import logging
-
 import database.models
 from fastapi import APIRouter, Depends
 from geoalchemy2.shape import to_shape
 from sqlalchemy.ext.asyncio.session import AsyncSession
-
 from database.database import get_db
-from database.route_repository import RouteRepository
+from database.graph_repository import GraphRepository
 from models.search_model import RouteRequest
 from routing_algorithms.dijkstra_routing import shortest_path_map
+from routing_algorithms.routing_factory import get_routing_algorithm
 from routing_algorithms.utils import find_nearest_location
 
 logger = logging.getLogger(__name__)
@@ -20,11 +19,18 @@ router = APIRouter(prefix="/api", tags=["directions"])
 
 @router.post("/find_route")
 async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
-    repository = RouteRepository(db=db)
+    # request.routeType = [dijkstra,astar]
+    # request.travelMode = [walking,cycling,transit]
 
-    query_result = await repository.query_route(request.from_, request.to)
+    repository = GraphRepository(db=db)
 
-    logger.info(f"Query result count: {len(query_result)}")
+    # ToDo: this should return a Graph already
+    route_graph = await repository.query_route_graph(request.from_, request.to)
+
+    logger.info(f"Fetched a graph: {route_graph.data_stats()}")
+
+    # ToDo: then pass a Graph to routing algorithm
+    algorithm = get_routing_algorithm(request)
 
     '''
     TODO:
@@ -36,7 +42,7 @@ async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
 
     # Collect the unique graph nodes returned by the query
     locations: set[database.models.Location] = set()
-    for _road, loc_from, loc_to in query_result:
+    for _road, loc_from, loc_to in route_graph:
         locations.add(loc_from)
         locations.add(loc_to)
 
@@ -52,14 +58,14 @@ async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
 
     logger.info(f"Location from {location_from.id} to {location_to.id}")
 
-    result: list[database.models.Road] = shortest_path_map(query_result, location_from, location_to)
+    result: list[database.models.Road] = shortest_path_map(route_graph, location_from, location_to)
 
     if not result:
         logger.warning("No path found between the requested points")
         return {"status": "error", "message": "No route found between the requested points"}
 
     # id -> (loc_from, loc_to) so the path can be turned back into coordinates
-    edges_by_road_id = {road.id: (loc_from, loc_to) for road, loc_from, loc_to in query_result}
+    edges_by_road_id = {road.id: (loc_from, loc_to) for road, loc_from, loc_to in route_graph}
 
     output = []
     total_distance = 0.0

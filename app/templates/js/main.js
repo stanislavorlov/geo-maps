@@ -34,6 +34,7 @@ async function searchRoute() {
     const fromInput = document.getElementById('from-input');
     const toInput = document.getElementById('to-input');
     const routeType = document.querySelector('input[name="route-type"]:checked').value;
+    const travelMode = document.querySelector('input[name="travel-mode"]:checked').value;
 
     const fromLat = fromInput.dataset.lat;
     const fromLng = fromInput.dataset.lng;
@@ -49,7 +50,12 @@ async function searchRoute() {
         const response = await fetch(`/api/find_route`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ from_: { lat: fromLat, lng: fromLng }, to: { lat: toLat, lng: toLng } })
+            body: JSON.stringify({ 
+                from_: { lat: fromLat, lng: fromLng }, 
+                to: { lat: toLat, lng: toLng },
+                routeType: routeType,
+                travelMode: travelMode
+            })
         });
 
         if (response.ok) {

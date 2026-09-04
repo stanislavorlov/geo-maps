@@ -1,6 +1,9 @@
 import heapq
 from collections import defaultdict
 from database.models import Road, Location
+from graph.graph import Graph
+from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm
+
 
 # For shortest distance:
 # new_distance = distance + road.distance
@@ -10,6 +13,11 @@ from database.models import Road, Location
 
 # and Dijkstra minimizes:
 # new_distance = distance + road.distance / road.speed
+
+class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
+    def find_route(self, graph: Graph, from_: Location, to_: Location):
+        pass
+
 
 def shortest_path_map(edges: list[tuple[Road, Location, Location]], from_: Location, to_: Location) -> list[Road]:
     adj_map = defaultdict(list)

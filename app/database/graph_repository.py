@@ -2,19 +2,21 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy import select, and_
 from sqlalchemy.orm import aliased
 from geoalchemy2 import functions as geo_func
+from graph.graph import Graph
+from graph.graph_factory import build_graph
 from .models import Location, Road
 from models.geocode_model import ReverseGeocodeRequest
 
-class RouteRepository:
+class GraphRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def query_route(
+    async def query_route_graph(
         self,
         start: ReverseGeocodeRequest,
         end: ReverseGeocodeRequest,
         buffer_degree: float = 0.01  # Default to ~1.1km instead of 5.5km
-    ) -> list[tuple[Road, Location, Location]]:
+    ) -> Graph:
         point_a_wkt = f"POINT({start.lng} {start.lat})"
         point_b_wkt = f"POINT({end.lng} {end.lat})"
 
@@ -42,5 +44,8 @@ class RouteRepository:
         )
 
         result = await self.db.execute(stmt)
+
+        return build_graph(result)
+
         # result contains rows of (Road, LocFrom, LocTo)
-        return result.all()
+        #return result.all()
