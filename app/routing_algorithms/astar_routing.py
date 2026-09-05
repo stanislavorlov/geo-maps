@@ -10,9 +10,9 @@ def haversine_distance(node1: Node, node2: Node) -> float:
     """Calculate the great-circle distance between two nodes in meters (admissible heuristic)."""
     lat1, lon1 = math.radians(node1.lat), math.radians(node1.lon)
     lat2, lon2 = math.radians(node2.lat), math.radians(node2.lon)
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = math.sin(dlat / 2.0) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2.0) ** 2
+    d_lat = lat2 - lat1
+    d_lon = lon2 - lon1
+    a = math.sin(d_lat / 2.0) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(d_lon / 2.0) ** 2
     c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
     return EARTH_RADIUS_METERS * c
 
