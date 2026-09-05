@@ -2,8 +2,6 @@ import heapq
 from graph.graph import Graph, Node, Edge
 from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm, RouteResult
 
-DEFAULT_SPEED = 30.0  # mph
-
 # For shortest distance:
 # new_distance = distance + road.distance
 
@@ -14,8 +12,8 @@ DEFAULT_SPEED = 30.0  # mph
 # new_distance = distance + road.distance / road.speed
 
 class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
-    def __init__(self, default_speed: float = DEFAULT_SPEED):
-        self.default_speed = default_speed
+    def __init__(self, speed: float = AbstractRoutingAlgorithm.DEFAULT_SPEED):
+        super().__init__(speed)
 
     def find_route(self, graph: Graph, start_node: Node, target_node: Node) -> RouteResult:
         if start_node.id == target_node.id:

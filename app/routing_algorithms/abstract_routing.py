@@ -13,6 +13,11 @@ class RouteResult:
 
 
 class AbstractRoutingAlgorithm(ABC):
+    DEFAULT_SPEED = 30.0  # mph
+
+    def __init__(self, speed: float = DEFAULT_SPEED):
+        self.default_speed = speed
+
     @abstractmethod
     def find_route(self, graph: Graph, start_node: Node, target_node: Node) -> RouteResult:
         pass

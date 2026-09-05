@@ -1,6 +1,6 @@
 import pytest
 from app.graph.graph import Graph, Node, Edge
-from routing_algorithms.dijkstra_routing import DijkstraRoutingAlgorithm, DEFAULT_SPEED
+from routing_algorithms.dijkstra_routing import DijkstraRoutingAlgorithm
 from routing_algorithms.astar_routing import AStarRoutingAlgorithm
 from routing_algorithms.routing_factory import get_routing_algorithm
 from models.search_model import RouteRequest
@@ -8,7 +8,7 @@ from models.geocode_model import ReverseGeocodeRequest
 
 
 ALGORITHMS = [
-    DijkstraRoutingAlgorithm(default_speed=30.0),
+    DijkstraRoutingAlgorithm(),
     AStarRoutingAlgorithm(),
 ]
 
