@@ -3,6 +3,7 @@ from app.graph.graph import Graph, Node, Edge
 from routing_algorithms.dijkstra_routing import DijkstraRoutingAlgorithm
 from routing_algorithms.astar_routing import AStarRoutingAlgorithm
 from routing_algorithms.routing_factory import get_routing_algorithm
+from routing_algorithms.travel_time import calculate_travel_time
 from models.search_model import RouteRequest
 from models.geocode_model import ReverseGeocodeRequest
 
@@ -24,7 +25,8 @@ def test_direct_route(algo):
 
     assert result.found is True
     assert result.distance == 500.0
-    assert result.time == 500.0 / 25.0
+    expected_time = calculate_travel_time(500.0, 25.0)
+    assert pytest.approx(result.time) == expected_time
     assert result.path == [[51.500, -0.120], [51.510, -0.130]]
     assert len(result.edges) == 1
 
@@ -45,7 +47,11 @@ def test_multi_hop_route(algo):
 
     assert result.found is True
     assert result.distance == 1200.0
-    expected_time = (300.0 / 30.0) + (400.0 / 20.0) + (500.0 / 10.0)
+    expected_time = (
+        calculate_travel_time(300.0, 30.0) +
+        calculate_travel_time(400.0, 20.0) +
+        calculate_travel_time(500.0, 10.0)
+    )
     assert pytest.approx(result.time) == expected_time
     assert result.path == [
         [51.500, -0.120],
@@ -140,8 +146,19 @@ def test_default_speed_fallback(algo):
 
     assert result.found is True
     assert result.distance == 60.0
-    # Default speed is 30.0, so time = 60.0 / 30.0 = 2.0
-    assert pytest.approx(result.time) == 2.0
+    expected_time = calculate_travel_time(60.0, 30.0)
+    assert pytest.approx(result.time) == expected_time
+
+
+def test_calculate_travel_time():
+    # 1 mile (1609.344m) at 60 mph should be exactly 1.0 minute
+    assert pytest.approx(calculate_travel_time(1609.344, 60.0, in_minutes=True)) == 1.0
+    # 1 mile (1609.344m) at 30 mph should be exactly 2.0 minutes (120 seconds)
+    assert pytest.approx(calculate_travel_time(1609.344, 30.0, in_minutes=True)) == 2.0
+    assert pytest.approx(calculate_travel_time(1609.344, 30.0, in_minutes=False)) == 120.0
+    # 0 distance or 0 speed returns 0.0
+    assert calculate_travel_time(0.0, 30.0) == 0.0
+    assert calculate_travel_time(100.0, 0.0) == 0.0
 
 
 def test_routing_factory_returns_dijkstra():

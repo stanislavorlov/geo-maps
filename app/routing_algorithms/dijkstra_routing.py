@@ -2,15 +2,7 @@ import heapq
 import time
 from graph.graph import Graph, Node, Edge
 from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm, RouteResult
-
-# For shortest distance:
-# new_distance = distance + road.distance
-
-# For fastest route:
-# travel_time = road.distance / road.speed
-
-# and Dijkstra minimizes:
-# new_distance = distance + road.distance / road.speed
+from routing_algorithms.travel_time import calculate_travel_time
 
 
 class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
@@ -81,8 +73,8 @@ class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
             to_node = graph.nodes[edge.to_id]
             coordinates.append([to_node.lat, to_node.lon])
             total_distance += edge.distance
-            speed = edge.speed if edge.speed else self.default_speed
-            total_time += edge.distance / speed
+            speed_mph = edge.speed if edge.speed else self.default_speed
+            total_time += calculate_travel_time(edge.distance, speed_mph)
 
         end_time = time.perf_counter()
 

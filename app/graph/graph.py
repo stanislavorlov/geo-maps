@@ -20,8 +20,10 @@ class Node:
 class Edge:
     from_id: int
     to_id: int
-    distance: float  # in meters
-    speed: Optional[float] = None  # speed limit in mph/kph
+    distance: float
+    """distance in meters"""
+    speed: Optional[float] = None
+    """speed limit in mph"""
     road_type: Optional[str] = None
 
     def to_dict(self) -> dict:

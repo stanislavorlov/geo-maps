@@ -19,6 +19,8 @@ class Road(Base):
     id = Column(Integer, primary_key=True, index=True)
     from_id = Column(BigInteger, index=True)
     to_id = Column(BigInteger, index=True)
-    distance = Column(Float)    # meters
+    distance = Column(Float)
+    """distance in meters"""
     speed = Column(Float)
+    """speed limit in mph"""
     road_type = Column(String, index=True)
