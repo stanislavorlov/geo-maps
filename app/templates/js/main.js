@@ -8,6 +8,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 L.control.zoom({ position: 'topright' }).addTo(map);
 
 var popup = L.popup();
+var currentRouteLine = null;
 
 let activeInputId = 'from-input';
 
@@ -60,20 +61,64 @@ async function searchRoute() {
 
         if (response.ok) {
             const data = await response.json();
-            if (data.path) {
-                var routeLine = L.polyline(data.path, {
-                    color: 'blue',
+            if (data.status === "success" && data.path && data.path.length > 0) {
+                // Clear previous route line if exists
+                if (currentRouteLine) {
+                    map.removeLayer(currentRouteLine);
+                }
+
+                currentRouteLine = L.polyline(data.path, {
+                    color: '#1a73e8',
                     weight: 5,
-                    routeName: "Scenic Highway Path"
+                    opacity: 0.85,
+                    routeName: "Route"
                 })
-                .bindTooltip(`${data.distance.toFixed(0)} · ${data.time.toFixed(0)}`, {
+                .bindTooltip(`${data.distance >= 1000 ? (data.distance / 1000).toFixed(1) + ' km' : data.distance.toFixed(0) + ' m'}`, {
                     permanent: true,
                     direction: 'center'
                 })
                 .addTo(map);
-                map.fitBounds(routeLine.getBounds());
+                map.fitBounds(currentRouteLine.getBounds(), { padding: [40, 40] });
+
+                // Display statistics
+                const statsPanel = document.getElementById('route-stats');
+                if (statsPanel) {
+                    statsPanel.style.display = 'block';
+
+                    // Update Algorithm Badge
+                    const algoBadge = document.getElementById('stat-algo-badge');
+                    if (algoBadge) {
+                        algoBadge.textContent = routeType === 'astar' ? 'A* search' : 'Dijkstra';
+                    }
+
+                    // Distance formatting
+                    const distanceStr = data.distance >= 1000
+                        ? `${(data.distance / 1000).toFixed(2)} km`
+                        : `${data.distance.toFixed(0)} m`;
+                    document.getElementById('stat-distance').textContent = distanceStr;
+
+                    // Est. time formatting
+                    const timeStr = data.time >= 60
+                        ? `${Math.floor(data.time / 60)}h ${(data.time % 60).toFixed(0)}m`
+                        : `${data.time.toFixed(1)} min`;
+                    document.getElementById('stat-time').textContent = timeStr;
+
+                    // Visited nodes
+                    const visitedCount = data.nodes_visited_count ?? data.visited_nodes ?? 0;
+                    document.getElementById('stat-visited-nodes').textContent = `${visitedCount}`;
+
+                    // Execution time
+                    let execTimeStr = '0 ms';
+                    if (data.execution_time !== undefined) {
+                        const ms = data.execution_time * 1000;
+                        execTimeStr = ms < 1 ? `${ms.toFixed(2)} ms` : `${ms.toFixed(1)} ms`;
+                    }
+                    document.getElementById('stat-exec-time').textContent = execTimeStr;
+                }
             } else {
-                alert("No route found between the selected points.");
+                const statsPanel = document.getElementById('route-stats');
+                if (statsPanel) statsPanel.style.display = 'none';
+                alert(data.message || "No route found between the selected points.");
             }
         } else {
             alert("Error finding route.");
@@ -135,8 +180,6 @@ async function handleSearchInput(e) {
             });
             const data = await response.json();
             console.log("Search API response:", data);
-            // For now just log it, later we can display suggestions below the input
-            // Or if we have results, we could place a marker on the map:
             if (data.results && data.results.length > 0) {
                 const firstResult = data.results[0];
                 L.marker([firstResult.lat, firstResult.lng]).addTo(map)

@@ -10,6 +10,8 @@ class RouteResult:
     time: float = 0.0      # estimated travel time
     path: list[list[float]] = field(default_factory=list)  # [[lat, lon], ...]
     edges: list[Edge] = field(default_factory=list)
+    nodes_visited_count: int = 0
+    execution_time: float = 0.0
 
 
 class AbstractRoutingAlgorithm(ABC):

@@ -1,5 +1,6 @@
 import math
 import heapq
+import time
 from graph.graph import Graph, Node, Edge
 from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm, RouteResult
 
@@ -28,16 +29,25 @@ class AStarRoutingAlgorithm(AbstractRoutingAlgorithm):
                 distance=0.0,
                 time=0.0,
                 path=[[start_node.lat, start_node.lon]],
-                edges=[]
+                edges=[],
+                nodes_visited_count=0,
+                execution_time=0.0,
             )
+
+        start_time = time.perf_counter()
 
         # Priority queue stores (f_score, node_id)
         queue: list[tuple[float, int]] = [(0.0, start_node.id)]
         previous: dict[int, tuple[int, Edge]] = {}
         g_score: dict[int, float] = {start_node.id: 0.0}
+        visited: set[int] = set()
 
         while queue:
             current_f, current_id = heapq.heappop(queue)
+
+            if current_id in visited:
+                continue
+            visited.add(current_id)
 
             if current_id == target_node.id:
                 break
@@ -56,7 +66,12 @@ class AStarRoutingAlgorithm(AbstractRoutingAlgorithm):
                     heapq.heappush(queue, (f, edge.to_id))
 
         if target_node.id not in g_score or (target_node.id not in previous and start_node.id != target_node.id):
-            return RouteResult(found=False)
+            end_time = time.perf_counter()
+            return RouteResult(
+                found=False,
+                nodes_visited_count=len(visited),
+                execution_time=end_time - start_time
+            )
 
         # Backtrack path
         edges_path: list[Edge] = []
@@ -80,10 +95,14 @@ class AStarRoutingAlgorithm(AbstractRoutingAlgorithm):
             speed = edge.speed if edge.speed else self.default_speed
             total_time += edge.distance / speed
 
+        end_time = time.perf_counter()
+
         return RouteResult(
             found=True,
             distance=total_distance,
             time=total_time,
             path=coordinates,
-            edges=edges_path
+            edges=edges_path,
+            nodes_visited_count=len(visited),
+            execution_time=end_time - start_time
         )

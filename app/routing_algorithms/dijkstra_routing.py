@@ -1,4 +1,5 @@
 import heapq
+import time
 from graph.graph import Graph, Node, Edge
 from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm, RouteResult
 
@@ -11,6 +12,7 @@ from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm, RouteR
 # and Dijkstra minimizes:
 # new_distance = distance + road.distance / road.speed
 
+
 class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
     def __init__(self, speed: float = AbstractRoutingAlgorithm.DEFAULT_SPEED):
         super().__init__(speed)
@@ -22,18 +24,24 @@ class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
                 distance=0.0,
                 time=0.0,
                 path=[[start_node.lat, start_node.lon]],
-                edges=[]
+                edges=[],
+                nodes_visited_count=0,
+                execution_time=0.0,
             )
+
+        start_time = time.perf_counter()
 
         distances = {start_node.id: 0.0}
         previous: dict[int, tuple[int, Edge]] = {}
         min_heap = [(0.0, start_node.id)]
+        visited: set[int] = set()
 
         while min_heap:
             current_dist, current_id = heapq.heappop(min_heap)
 
-            if current_dist > distances.get(current_id, float("inf")):
+            if current_id in visited:
                 continue
+            visited.add(current_id)
 
             if current_id == target_node.id:
                 break
@@ -47,7 +55,12 @@ class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
                     heapq.heappush(min_heap, (new_dist, edge.to_id))
 
         if target_node.id not in distances:
-            return RouteResult(found=False)
+            end_time = time.perf_counter()
+            return RouteResult(
+                found=False,
+                nodes_visited_count=len(visited),
+                execution_time=end_time - start_time
+            )
 
         # Backtrack path
         edges_path: list[Edge] = []
@@ -71,10 +84,14 @@ class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
             speed = edge.speed if edge.speed else self.default_speed
             total_time += edge.distance / speed
 
+        end_time = time.perf_counter()
+
         return RouteResult(
             found=True,
             distance=total_distance,
             time=total_time,
             path=coordinates,
-            edges=edges_path
+            edges=edges_path,
+            nodes_visited_count=len(visited),
+            execution_time=end_time - start_time
         )

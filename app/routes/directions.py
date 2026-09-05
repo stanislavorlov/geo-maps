@@ -39,4 +39,7 @@ async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
         "distance": result.distance,     # in meters
         "time": result.time,
         "path": result.path,
+        "execution_time": result.execution_time,
+        "nodes_visited_count": result.nodes_visited_count,
+        "visited_nodes": result.nodes_visited_count,
     }
