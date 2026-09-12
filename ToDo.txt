@@ -1,6 +1,6 @@
 UI:
 1. Add a "Find route" button on UI or another trigger
-2. Add new endpoint POST /api/route accepting both points, which will call a router (e.g. OSRM) to find a route between two points
+2. Add new endpoint POST /api/route accepting both points, which will call a router (e.g., OSRM) to find a route between two points
 3. Once a response is received, the UI will draw a polyline for the route on the Leaflet map (L.polyline)
 
 Backend (API):
@@ -15,5 +15,5 @@ Graph (In-memory):
 
 If data not in database:
 10. DB distance_centroid should handle it automatically (closest existing nodes)
-11. The API should have a maximum distance it can search in the database (e.g. 200m)
-12. If too far, the UI can display a pop-up saying "Route too long, please select points closer to each other" and also clear the map route.
+11. The API should have a maximum distance it can search in the database (e.g., 200 m)
+12. If too far, the UI can display a pop-up saying, "Route is too long, please select points closer to each other" and also clear the map route.

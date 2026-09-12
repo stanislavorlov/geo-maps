@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api", tags=["directions"])
 @router.post("/find_route")
 async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
     repository = GraphRepository(db=db)
-    route_graph = await repository.query_route_graph(request.from_, request.to)
+    route_graph = await repository.query_route_graph(request.travelMode, request.from_, request.to)
 
     logger.info(f"Fetched graph: {route_graph.data_stats()}")
 
@@ -28,7 +28,7 @@ async def find_route(request: RouteRequest, db: AsyncSession = Depends(get_db)):
     logger.info(f"Finding route from node {node_from.id} to node {node_to.id}")
 
     algorithm = get_routing_algorithm(request)
-    result = algorithm.find_route(route_graph, node_from, node_to)
+    result = algorithm.find_route(route_graph, node_from, node_to, request.travelMode)
 
     if not result.found:
         logger.warning("No path found between the requested points")

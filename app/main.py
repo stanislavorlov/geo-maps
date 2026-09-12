@@ -18,10 +18,12 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.debug("Application starting up...")
 
-    # Create all tables in the database
+    # Create all tables in the database and apply incremental column migrations
     async with engine.begin() as conn:
-        # Note: In production you would probably use Alembic instead of this
         await conn.run_sync(Base.metadata.create_all)
+        from sqlalchemy import text
+        await conn.execute(text("ALTER TABLE roads ADD COLUMN IF NOT EXISTS name VARCHAR;"))
+        await conn.execute(text("ALTER TABLE roads ADD COLUMN IF NOT EXISTS tags JSON;"))
     yield
     logger.debug("Application shutting down...")
 

@@ -4,6 +4,7 @@ from sqlalchemy.orm import aliased
 from geoalchemy2 import functions as geo_func
 from graph.graph import Graph
 from graph.graph_factory import GraphFactory
+from models.speed_limit import MODE_PROFILES
 from .models import Location, Road
 from models.geocode_model import ReverseGeocodeRequest
 
@@ -14,6 +15,7 @@ class GraphRepository:
 
     async def query_route_graph(
         self,
+        travel_mode: str,
         start: ReverseGeocodeRequest,
         end: ReverseGeocodeRequest,
         buffer_degree: float = 0.01  # Default to ~1.1km
@@ -31,6 +33,8 @@ class GraphRepository:
         loc_from = aliased(Location)
         loc_to = aliased(Location)
 
+        allowed_road_types = list(MODE_PROFILES[travel_mode].keys())
+
         # ST_DWithin is index-accelerated and avoids constructing buffer geometries
         stmt = (
             select(Road, loc_from, loc_to)
@@ -38,8 +42,9 @@ class GraphRepository:
             .join(loc_to, Road.to_id == loc_to.id)
             .where(
                 and_(
+                    Road.road_type.in_(allowed_road_types),
                     geo_func.ST_DWithin(loc_from.geom, route_line, buffer_degree),
-                    geo_func.ST_DWithin(loc_to.geom, route_line, buffer_degree)
+                    geo_func.ST_DWithin(loc_to.geom, route_line, buffer_degree),
                 )
             )
         )
