@@ -2,9 +2,8 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
-import database.models  # Import models to ensure they are registered with Base
 from database.database import Base, engine
-from routes import directions, geocoding, pages
+from api import directions, geocoding, pages
 
 # configure logging
 logging.basicConfig(
