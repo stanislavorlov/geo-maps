@@ -1,12 +1,9 @@
 import logging
-
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio.session import AsyncSession
-
-from database.database import get_db
 from database.location_repository import LocationRepository
 from models.geocode_model import ReverseGeocodeRequest
 from models.search_model import SearchRequest
+from api.dependencies import get_location_repository
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +11,7 @@ router = APIRouter(prefix="/api", tags=["geocoding"])
 
 
 @router.post("/search")
-async def search(request: SearchRequest, db: AsyncSession = Depends(get_db)):
+async def search(request: SearchRequest):
     # TODO: Implement search logic (e.g. forward geocoding or autocomplete)
     # Return a stub response for now
     return {
@@ -27,9 +24,10 @@ async def search(request: SearchRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/reverse-geocode")
-async def reverse_geocode(request: ReverseGeocodeRequest, db: AsyncSession = Depends(get_db)):
-    repository = LocationRepository(db=db)
-
+async def reverse_geocode(
+    request: ReverseGeocodeRequest,
+    repository: LocationRepository = Depends(get_location_repository),
+):
     lat, lng = request.lat, request.lng
     logger.info(f"Quering geocode position: {request}")
 

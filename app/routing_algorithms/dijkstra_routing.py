@@ -1,14 +1,17 @@
 import heapq
 import time
 from graph.graph import Graph, Node, Edge
-from models.speed_limit import get_effective_speed
 from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm, RouteResult
-from routing_algorithms.travel_time import calculate_travel_time
+from services.speed_limit_service import SpeedLimitService
+from services.travel_time_service import TravelTimeService
 
 
 class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
-    def __init__(self, speed: float = AbstractRoutingAlgorithm.DEFAULT_SPEED):
-        super().__init__(speed)
+    def __init__(self,
+                 speed_limit_service: SpeedLimitService,
+                 travel_time_service: TravelTimeService,
+                 speed: float = AbstractRoutingAlgorithm.DEFAULT_SPEED):
+        super().__init__(speed_limit_service=speed_limit_service, travel_time_service=travel_time_service, speed=speed)
 
     def find_route(self, graph: Graph, start_node: Node, target_node: Node, travel_mode: str) -> RouteResult:
         if start_node.id == target_node.id:
@@ -40,7 +43,7 @@ class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
                 break
 
             for edge in graph.adjacency.get(current_id, []):
-                speed = get_effective_speed(edge.road_type, travel_mode, edge.speed, edge.tags, edge.is_reverse)
+                speed = self.speed_limit_service.get_effective_speed(edge.road_type, travel_mode, edge.speed, edge.tags, edge.is_reverse)
                 if speed is None:
                     continue  # Inaccessible edge for this travel mode
 
@@ -78,8 +81,8 @@ class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
             to_node = graph.nodes[edge.to_id]
             coordinates.append([to_node.lat, to_node.lon])
             total_distance += edge.distance
-            speed_mph = get_effective_speed(edge.road_type, travel_mode, edge.speed, edge.tags, edge.is_reverse) or self.default_speed
-            total_time += calculate_travel_time(edge.distance, speed_mph)
+            speed_mph = self.speed_limit_service.get_effective_speed(edge.road_type, travel_mode, edge.speed, edge.tags, edge.is_reverse) or self.default_speed
+            total_time += self.travel_time_service.calculate_travel_time(edge.distance, speed_mph)
 
         end_time = time.perf_counter()
 

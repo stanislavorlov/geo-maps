@@ -5,11 +5,20 @@ from models.search_model import RouteRequest
 from routing_algorithms.astar_routing import AStarRoutingAlgorithm
 from routing_algorithms.dijkstra_routing import DijkstraRoutingAlgorithm
 from routing_algorithms.routing_factory import get_routing_algorithm
-from routing_algorithms.travel_time import calculate_travel_time
+from services.speed_limit_service import SpeedLimitService, TravelMode
+from services.travel_time_service import TravelTimeService
+
+speed_limit_service = SpeedLimitService()
+travel_time_service = TravelTimeService()
+
+
+def calculate_travel_time(distance_meters: float, speed_mph: float, in_minutes: bool = True) -> float:
+    return travel_time_service.calculate_travel_time(distance_meters, speed_mph, in_minutes)
+
 
 ALGORITHMS = [
-    DijkstraRoutingAlgorithm(),
-    AStarRoutingAlgorithm(),
+    DijkstraRoutingAlgorithm(speed_limit_service, travel_time_service),
+    AStarRoutingAlgorithm(speed_limit_service, travel_time_service),
 ]
 
 
@@ -311,7 +320,7 @@ def test_routing_factory_returns_dijkstra():
         routeType="dijkstra",
         travelMode="driving"
     )
-    algo = get_routing_algorithm(req)
+    algo = get_routing_algorithm(req, speed_limit_service, travel_time_service)
     assert isinstance(algo, DijkstraRoutingAlgorithm)
 
 
@@ -322,7 +331,7 @@ def test_routing_factory_returns_astar():
         routeType="astar",
         travelMode="driving"
     )
-    algo = get_routing_algorithm(req)
+    algo = get_routing_algorithm(req, speed_limit_service, travel_time_service)
     assert isinstance(algo, AStarRoutingAlgorithm)
 
 
@@ -334,4 +343,4 @@ def test_routing_factory_unsupported_type_raises():
         travelMode="driving"
     )
     with pytest.raises(NotImplementedError):
-        get_routing_algorithm(req)
+        get_routing_algorithm(req, speed_limit_service, travel_time_service)

@@ -9,7 +9,7 @@ uv run fastapi dev
 ## Run tests
 
 ```bash
-PYTHONPATH=app .venv/bin/pytest tests/test_routing_algorithms.py -v
+PYTHONPATH=app .venv/bin/pytest -v
 ```
 
 

@@ -4,14 +4,15 @@ from sqlalchemy.orm import aliased
 from geoalchemy2 import functions as geo_func
 from graph.graph import Graph
 from graph.graph_factory import GraphFactory
-from models.speed_limit import MODE_PROFILES
+from services.speed_limit_service import SpeedLimitService
 from .models import Location, Road
 from models.geocode_model import ReverseGeocodeRequest
 
 
 class GraphRepository:
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, limit_service: SpeedLimitService):
         self.db = db
+        self.speedLimitService = limit_service
 
     async def query_route_graph(
         self,
@@ -33,7 +34,7 @@ class GraphRepository:
         loc_from = aliased(Location)
         loc_to = aliased(Location)
 
-        allowed_road_types = list(MODE_PROFILES[travel_mode].keys())
+        allowed_road_types = self.speedLimitService.calculate_allowed_road_types(travel_mode)
 
         # ST_DWithin is index-accelerated and avoids constructing buffer geometries
         stmt = (
