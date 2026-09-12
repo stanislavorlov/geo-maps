@@ -24,5 +24,5 @@ class AbstractRoutingAlgorithm(ABC):
         self.default_speed = speed
 
     @abstractmethod
-    def find_route(self, graph: Graph, start_node: Node, target_node: Node) -> RouteResult:
+    def find_route(self, graph: Graph, start_node: Node, target_node: Node, travel_mode: str) -> RouteResult:
         pass

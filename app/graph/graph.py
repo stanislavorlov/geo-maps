@@ -1,5 +1,5 @@
 import math
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import Optional
 from scipy.spatial import cKDTree
 
@@ -25,6 +25,9 @@ class Edge:
     speed: Optional[float] = None
     """speed limit in mph"""
     road_type: Optional[str] = None
+    name: Optional[str] = None
+    tags: Optional[dict] = field(default_factory=dict)
+    is_reverse: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -33,6 +36,9 @@ class Edge:
             "distance": round(self.distance, 2),
             "speed": self.speed,
             "road_type": self.road_type,
+            "name": self.name,
+            "tags": self.tags,
+            "is_reverse": self.is_reverse,
         }
 
 
@@ -74,3 +80,15 @@ class Graph:
             "locations_count": len(self.nodes),
             "roads_count": len(self.edges),
         }
+
+    def to_dict(self) -> dict:
+        return {
+            "nodes": [n.to_dict() for n in self.nodes.values()],
+            "edges": [e.to_dict() for e in self.edges],
+        }
+
+    def save_file(self, file_path: str):
+        import json
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(self.to_dict(), f, indent=2)
+
