@@ -22,14 +22,15 @@ ALGORITHMS = [
 ]
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_direct_route(algo):
+async def test_direct_route(algo):
     n1 = Node(id=1, lat=51.500, lon=-0.120)
     n2 = Node(id=2, lat=51.510, lon=-0.130)
     e1 = Edge(from_id=1, to_id=2, distance=500.0, speed=25.0, road_type="primary", name="Primary St")
 
     graph = Graph(nodes={1: n1, 2: n2}, edges=[e1])
-    result = algo.find_route(graph, n1, n2, travel_mode="driving")
+    result = await algo.find_route(graph, n1, n2, travel_mode="driving")
 
     assert result.found is True
     assert result.distance == 500.0
@@ -40,8 +41,9 @@ def test_direct_route(algo):
     assert result.edges[0].name == "Primary St"
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_multi_hop_route(algo):
+async def test_multi_hop_route(algo):
     n1 = Node(id=1, lat=51.500, lon=-0.120)
     n2 = Node(id=2, lat=51.505, lon=-0.125)
     n3 = Node(id=3, lat=51.510, lon=-0.130)
@@ -52,7 +54,7 @@ def test_multi_hop_route(algo):
     e3 = Edge(from_id=3, to_id=4, distance=500.0, speed=10.0, road_type="residential")
 
     graph = Graph(nodes={1: n1, 2: n2, 3: n3, 4: n4}, edges=[e1, e2, e3])
-    result = algo.find_route(graph, n1, n4, travel_mode="driving")
+    result = await algo.find_route(graph, n1, n4, travel_mode="driving")
 
     assert result.found is True
     assert result.distance == 1200.0
@@ -71,8 +73,9 @@ def test_multi_hop_route(algo):
     assert len(result.edges) == 3
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_chooses_shorter_path(algo):
+async def test_chooses_shorter_path(algo):
     # Graph with 2 paths from 1 to 4:
     # Path A: 1 -> 2 -> 4 (dist = 400 + 400 = 800)
     # Path B: 1 -> 3 -> 4 (dist = 200 + 300 = 500) -> SHORTER
@@ -87,19 +90,20 @@ def test_chooses_shorter_path(algo):
     e4 = Edge(from_id=3, to_id=4, distance=300.0, speed=30.0, road_type="secondary")
 
     graph = Graph(nodes={1: n1, 2: n2, 3: n3, 4: n4}, edges=[e1, e2, e3, e4])
-    result = algo.find_route(graph, n1, n4, travel_mode="driving")
+    result = await algo.find_route(graph, n1, n4, travel_mode="driving")
 
     assert result.found is True
     assert result.distance == 500.0
     assert result.path == [[51.0, 0.0], [51.2, 0.2], [51.3, 0.3]]
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_same_start_and_destination(algo):
+async def test_same_start_and_destination(algo):
     n1 = Node(id=1, lat=51.500, lon=-0.120)
     graph = Graph(nodes={1: n1}, edges=[])
 
-    result = algo.find_route(graph, n1, n1, travel_mode="driving")
+    result = await algo.find_route(graph, n1, n1, travel_mode="driving")
 
     assert result.found is True
     assert result.distance == 0.0
@@ -108,8 +112,9 @@ def test_same_start_and_destination(algo):
     assert result.edges == []
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_disconnected_graph_no_route(algo):
+async def test_disconnected_graph_no_route(algo):
     n1 = Node(id=1, lat=51.0, lon=0.0)
     n2 = Node(id=2, lat=51.1, lon=0.1)
     n3 = Node(id=3, lat=51.2, lon=0.2)
@@ -117,7 +122,7 @@ def test_disconnected_graph_no_route(algo):
     e1 = Edge(from_id=1, to_id=2, distance=100.0, speed=30.0, road_type="primary")
 
     graph = Graph(nodes={1: n1, 2: n2, 3: n3}, edges=[e1])
-    result = algo.find_route(graph, n1, n3, travel_mode="driving")
+    result = await algo.find_route(graph, n1, n3, travel_mode="driving")
 
     assert result.found is False
     assert result.distance == 0.0
@@ -125,8 +130,9 @@ def test_disconnected_graph_no_route(algo):
     assert result.edges == []
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_one_way_road_respects_direction(algo):
+async def test_one_way_road_respects_direction(algo):
     n1 = Node(id=1, lat=51.0, lon=0.0)
     n2 = Node(id=2, lat=51.1, lon=0.1)
     # Forward and reverse edges created with oneway tag
@@ -136,16 +142,17 @@ def test_one_way_road_respects_direction(algo):
     graph = Graph(nodes={1: n1, 2: n2}, edges=[e1_fwd, e1_rev])
 
     # Forward route succeeds for driving
-    forward_result = algo.find_route(graph, n1, n2, travel_mode="driving")
+    forward_result = await algo.find_route(graph, n1, n2, travel_mode="driving")
     assert forward_result.found is True
 
     # Reverse route fails for driving
-    reverse_result = algo.find_route(graph, n2, n1, travel_mode="driving")
+    reverse_result = await algo.find_route(graph, n2, n1, travel_mode="driving")
     assert reverse_result.found is False
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_one_way_multimodal_pedestrian_and_contraflow_bicycle(algo):
+async def test_one_way_multimodal_pedestrian_and_contraflow_bicycle(algo):
     n1 = Node(id=1, lat=51.0, lon=0.0)
     n2 = Node(id=2, lat=51.1, lon=0.1)
 
@@ -155,11 +162,11 @@ def test_one_way_multimodal_pedestrian_and_contraflow_bicycle(algo):
     graph1 = Graph(nodes={1: n1, 2: n2}, edges=[e_fwd, e_rev])
 
     # Pedestrian walking reverse is allowed
-    walk_rev = algo.find_route(graph1, n2, n1, travel_mode="walking")
+    walk_rev = await algo.find_route(graph1, n2, n1, travel_mode="walking")
     assert walk_rev.found is True
 
     # Cycling reverse is disallowed without contraflow
-    cycle_rev_fail = algo.find_route(graph1, n2, n1, travel_mode="cycling")
+    cycle_rev_fail = await algo.find_route(graph1, n2, n1, travel_mode="cycling")
     assert cycle_rev_fail.found is False
 
     # 2. One-way with bicycle contraflow (oneway:bicycle=no)
@@ -168,12 +175,13 @@ def test_one_way_multimodal_pedestrian_and_contraflow_bicycle(algo):
     graph2 = Graph(nodes={1: n1, 2: n2}, edges=[e_cf_fwd, e_cf_rev])
 
     # Cycling reverse is now allowed
-    cycle_rev_ok = algo.find_route(graph2, n2, n1, travel_mode="cycling")
+    cycle_rev_ok = await algo.find_route(graph2, n2, n1, travel_mode="cycling")
     assert cycle_rev_ok.found is True
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_access_restrictions_and_overrides(algo):
+async def test_access_restrictions_and_overrides(algo):
     n1 = Node(id=1, lat=51.0, lon=0.0)
     n2 = Node(id=2, lat=51.1, lon=0.1)
 
@@ -181,27 +189,28 @@ def test_access_restrictions_and_overrides(algo):
     e_priv = Edge(from_id=1, to_id=2, distance=100.0, speed=20.0, road_type="residential", tags={"access": "private"})
     graph_priv = Graph(nodes={1: n1, 2: n2}, edges=[e_priv])
 
-    assert algo.find_route(graph_priv, n1, n2, travel_mode="driving").found is False
-    assert algo.find_route(graph_priv, n1, n2, travel_mode="walking").found is False
-    assert algo.find_route(graph_priv, n1, n2, travel_mode="cycling").found is False
+    assert (await algo.find_route(graph_priv, n1, n2, travel_mode="driving")).found is False
+    assert (await algo.find_route(graph_priv, n1, n2, travel_mode="walking")).found is False
+    assert (await algo.find_route(graph_priv, n1, n2, travel_mode="cycling")).found is False
 
     # 2. Private road with foot=yes override: pedestrian allowed, driving blocked
     e_foot = Edge(from_id=1, to_id=2, distance=100.0, speed=20.0, road_type="residential", tags={"access": "private", "foot": "yes"})
     graph_foot = Graph(nodes={1: n1, 2: n2}, edges=[e_foot])
 
-    assert algo.find_route(graph_foot, n1, n2, travel_mode="walking").found is True
-    assert algo.find_route(graph_foot, n1, n2, travel_mode="driving").found is False
+    assert (await algo.find_route(graph_foot, n1, n2, travel_mode="walking")).found is True
+    assert (await algo.find_route(graph_foot, n1, n2, travel_mode="driving")).found is False
 
     # 3. Private road with bicycle=yes override: cycling allowed, driving blocked
     e_bike = Edge(from_id=1, to_id=2, distance=100.0, speed=20.0, road_type="residential", tags={"access": "private", "bicycle": "yes"})
     graph_bike = Graph(nodes={1: n1, 2: n2}, edges=[e_bike])
 
-    assert algo.find_route(graph_bike, n1, n2, travel_mode="cycling").found is True
-    assert algo.find_route(graph_bike, n1, n2, travel_mode="driving").found is False
+    assert (await algo.find_route(graph_bike, n1, n2, travel_mode="cycling")).found is True
+    assert (await algo.find_route(graph_bike, n1, n2, travel_mode="driving")).found is False
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_surface_factor_speed_adjustment(algo):
+async def test_surface_factor_speed_adjustment(algo):
     n1 = Node(id=1, lat=51.0, lon=0.0)
     n2 = Node(id=2, lat=51.1, lon=0.1)
 
@@ -209,17 +218,18 @@ def test_surface_factor_speed_adjustment(algo):
     e_cobble = Edge(from_id=1, to_id=2, distance=800.0, speed=None, road_type="residential", tags={"surface": "cobblestone"})
     graph = Graph(nodes={1: n1, 2: n2}, edges=[e_cobble])
 
-    drive_res = algo.find_route(graph, n1, n2, travel_mode="driving")
+    drive_res = await algo.find_route(graph, n1, n2, travel_mode="driving")
     assert drive_res.found is True
     assert pytest.approx(drive_res.time) == calculate_travel_time(800.0, 16.0)
 
-    cycle_res = algo.find_route(graph, n1, n2, travel_mode="cycling")
+    cycle_res = await algo.find_route(graph, n1, n2, travel_mode="cycling")
     assert cycle_res.found is True
     assert pytest.approx(cycle_res.time) == calculate_travel_time(800.0, 7.2)
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_cycleway_infrastructure_boost(algo):
+async def test_cycleway_infrastructure_boost(algo):
     n1 = Node(id=1, lat=51.0, lon=0.0)
     n2 = Node(id=2, lat=51.1, lon=0.1)
 
@@ -227,20 +237,21 @@ def test_cycleway_infrastructure_boost(algo):
     e_cycle_lane = Edge(from_id=1, to_id=2, distance=1000.0, speed=30.0, road_type="primary", tags={"cycleway": "lane"})
     graph = Graph(nodes={1: n1, 2: n2}, edges=[e_cycle_lane])
 
-    cycle_res = algo.find_route(graph, n1, n2, travel_mode="cycling")
+    cycle_res = await algo.find_route(graph, n1, n2, travel_mode="cycling")
     assert cycle_res.found is True
     assert pytest.approx(cycle_res.time) == calculate_travel_time(1000.0, 14.0)
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_default_speed_fallback(algo):
+async def test_default_speed_fallback(algo):
     n1 = Node(id=1, lat=51.0, lon=0.0)
     n2 = Node(id=2, lat=51.1, lon=0.1)
     # Edge with speed=None, residential speed for driving is 20.0 mph
     e1 = Edge(from_id=1, to_id=2, distance=60.0, speed=None, road_type="residential")
 
     graph = Graph(nodes={1: n1, 2: n2}, edges=[e1])
-    result = algo.find_route(graph, n1, n2, travel_mode="driving")
+    result = await algo.find_route(graph, n1, n2, travel_mode="driving")
 
     assert result.found is True
     assert result.distance == 60.0
@@ -248,8 +259,9 @@ def test_default_speed_fallback(algo):
     assert pytest.approx(result.time) == expected_time
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_travel_mode_pedestrian_cannot_use_motorway(algo):
+async def test_travel_mode_pedestrian_cannot_use_motorway(algo):
     n1 = Node(id=1, lat=51.0, lon=0.0)
     n2 = Node(id=2, lat=51.1, lon=0.1)
     e1 = Edge(from_id=1, to_id=2, distance=1000.0, speed=70.0, road_type="motorway")
@@ -257,17 +269,18 @@ def test_travel_mode_pedestrian_cannot_use_motorway(algo):
     graph = Graph(nodes={1: n1, 2: n2}, edges=[e1])
 
     # Walking on motorway is forbidden
-    walk_result = algo.find_route(graph, n1, n2, travel_mode="walking")
+    walk_result = await algo.find_route(graph, n1, n2, travel_mode="walking")
     assert walk_result.found is False
 
     # Driving on motorway is allowed
-    drive_result = algo.find_route(graph, n1, n2, travel_mode="driving")
+    drive_result = await algo.find_route(graph, n1, n2, travel_mode="driving")
     assert drive_result.found is True
     assert pytest.approx(drive_result.time) == calculate_travel_time(1000.0, 70.0)
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_travel_mode_car_cannot_use_footway(algo):
+async def test_travel_mode_car_cannot_use_footway(algo):
     n1 = Node(id=1, lat=51.0, lon=0.0)
     n2 = Node(id=2, lat=51.1, lon=0.1)
     e1 = Edge(from_id=1, to_id=2, distance=300.0, speed=None, road_type="footway")
@@ -275,17 +288,18 @@ def test_travel_mode_car_cannot_use_footway(algo):
     graph = Graph(nodes={1: n1, 2: n2}, edges=[e1])
 
     # Driving on footway is forbidden
-    drive_result = algo.find_route(graph, n1, n2, travel_mode="driving")
+    drive_result = await algo.find_route(graph, n1, n2, travel_mode="driving")
     assert drive_result.found is False
 
     # Walking on footway is allowed (footway speed = 3.1 mph)
-    walk_result = algo.find_route(graph, n1, n2, travel_mode="walking")
+    walk_result = await algo.find_route(graph, n1, n2, travel_mode="walking")
     assert walk_result.found is True
     assert pytest.approx(walk_result.time) == calculate_travel_time(300.0, 3.1)
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
-def test_travel_mode_cycling_profile(algo):
+async def test_travel_mode_cycling_profile(algo):
     n1 = Node(id=1, lat=51.0, lon=0.0)
     n2 = Node(id=2, lat=51.1, lon=0.1)
     e1 = Edge(from_id=1, to_id=2, distance=600.0, speed=None, road_type="cycleway")
@@ -293,13 +307,42 @@ def test_travel_mode_cycling_profile(algo):
     graph = Graph(nodes={1: n1, 2: n2}, edges=[e1])
 
     # Driving on cycleway is forbidden
-    drive_result = algo.find_route(graph, n1, n2, travel_mode="driving")
+    drive_result = await algo.find_route(graph, n1, n2, travel_mode="driving")
     assert drive_result.found is False
 
     # Cycling on cycleway is allowed (cycleway speed = 12.0 mph)
-    cycle_result = algo.find_route(graph, n1, n2, travel_mode="cycling")
+    cycle_result = await algo.find_route(graph, n1, n2, travel_mode="cycling")
     assert cycle_result.found is True
     assert pytest.approx(cycle_result.time) == calculate_travel_time(600.0, 12.0)
+
+
+class MockWebSocket:
+    def __init__(self):
+        self.messages = []
+
+    async def send_json(self, data):
+        self.messages.append(data)
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("algo", ALGORITHMS, ids=lambda a: type(a).__name__)
+async def test_websocket_progress_streaming(algo):
+    n1 = Node(id=1, lat=51.500, lon=-0.120)
+    n2 = Node(id=2, lat=51.505, lon=-0.125)
+    n3 = Node(id=3, lat=51.510, lon=-0.130)
+
+    e1 = Edge(from_id=1, to_id=2, distance=300.0, speed=30.0, road_type="primary")
+    e2 = Edge(from_id=2, to_id=3, distance=400.0, speed=20.0, road_type="secondary")
+
+    graph = Graph(nodes={1: n1, 2: n2, 3: n3}, edges=[e1, e2])
+    ws = MockWebSocket()
+    result = await algo.find_route(graph, n1, n3, travel_mode="driving", websocket=ws)
+
+    assert result.found is True
+    assert len(ws.messages) > 0
+    assert ws.messages[0]["type"] == "progress"
+    assert "node" in ws.messages[0]
+    assert "nodes_visited_count" in ws.messages[0]
 
 
 def test_calculate_travel_time():

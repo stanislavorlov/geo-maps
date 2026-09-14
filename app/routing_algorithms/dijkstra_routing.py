@@ -1,5 +1,7 @@
+import asyncio
 import heapq
 import time
+from typing import Any, Optional
 from graph.graph import Graph, Node, Edge
 from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm, RouteResult
 from services.speed_limit_service import SpeedLimitService
@@ -13,7 +15,14 @@ class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
                  speed: float = AbstractRoutingAlgorithm.DEFAULT_SPEED):
         super().__init__(speed_limit_service=speed_limit_service, travel_time_service=travel_time_service, speed=speed)
 
-    def find_route(self, graph: Graph, start_node: Node, target_node: Node, travel_mode: str) -> RouteResult:
+    async def find_route(
+        self,
+        graph: Graph,
+        start_node: Node,
+        target_node: Node,
+        travel_mode: str,
+        websocket: Optional[Any] = None
+    ) -> RouteResult:
         if start_node.id == target_node.id:
             return RouteResult(
                 found=True,
@@ -38,6 +47,27 @@ class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
             if current_id in visited:
                 continue
             visited.add(current_id)
+
+            if websocket is not None:
+                curr_node = graph.nodes.get(current_id)
+                if curr_node is not None:
+                    edge_coords = None
+                    if current_id in previous:
+                        prev_id, _ = previous[current_id]
+                        prev_node = graph.nodes.get(prev_id)
+                        if prev_node is not None:
+                            edge_coords = [[prev_node.lat, prev_node.lon], [curr_node.lat, curr_node.lon]]
+                    try:
+                        await websocket.send_json({
+                            "type": "progress",
+                            "node": [curr_node.lat, curr_node.lon],
+                            "edge": edge_coords,
+                            "nodes_visited_count": len(visited),
+                            "current_distance": current_dist,
+                        })
+                        await asyncio.sleep(0.001)
+                    except Exception:
+                        pass
 
             if current_id == target_node.id:
                 break

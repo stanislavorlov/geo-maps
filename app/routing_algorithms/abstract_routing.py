@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from graph.graph import Graph, Node, Edge
 from services.speed_limit_service import SpeedLimitService
 from services.travel_time_service import TravelTimeService
-
+from typing import Any, Optional
 
 @dataclass
 class RouteResult:
@@ -16,7 +16,6 @@ class RouteResult:
     edges: list[Edge] = field(default_factory=list)
     nodes_visited_count: int = 0
     execution_time: float = 0.0
-
 
 class AbstractRoutingAlgorithm(ABC):
     """default spped in mph"""
@@ -32,5 +31,12 @@ class AbstractRoutingAlgorithm(ABC):
         self.travel_time_service = travel_time_service
 
     @abstractmethod
-    def find_route(self, graph: Graph, start_node: Node, target_node: Node, travel_mode: str) -> RouteResult:
+    async def find_route(
+        self,
+        graph: Graph,
+        start_node: Node,
+        target_node: Node,
+        travel_mode: str,
+        websocket: Optional[Any] = None
+    ) -> RouteResult:
         pass
