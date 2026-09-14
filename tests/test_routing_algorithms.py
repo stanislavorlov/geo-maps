@@ -4,6 +4,7 @@ from models.geocode_model import ReverseGeocodeRequest
 from models.search_model import RouteRequest
 from routing_algorithms.astar_routing import AStarRoutingAlgorithm
 from routing_algorithms.dijkstra_routing import DijkstraRoutingAlgorithm
+from routing_algorithms.bidirectional_dijkstra_routing import BidirectionalDijkstraRoutingAlgorithm
 from routing_algorithms.routing_factory import get_routing_algorithm
 from services.speed_limit_service import SpeedLimitService, TravelMode
 from services.travel_time_service import TravelTimeService
@@ -19,6 +20,7 @@ def calculate_travel_time(distance_meters: float, speed_mph: float, in_minutes: 
 ALGORITHMS = [
     DijkstraRoutingAlgorithm(speed_limit_service, travel_time_service),
     AStarRoutingAlgorithm(speed_limit_service, travel_time_service),
+    BidirectionalDijkstraRoutingAlgorithm(speed_limit_service, travel_time_service),
 ]
 
 
@@ -378,6 +380,18 @@ def test_routing_factory_returns_astar():
     assert isinstance(algo, AStarRoutingAlgorithm)
 
 
+def test_routing_factory_returns_bidirectional_dijkstra():
+    req = RouteRequest(
+        from_=ReverseGeocodeRequest(lat=51.5, lng=-0.1),
+        to=ReverseGeocodeRequest(lat=51.6, lng=-0.2),
+        routeType="dijkstra",
+        travelMode="driving",
+        bidirectional=True
+    )
+    algo = get_routing_algorithm(req, speed_limit_service, travel_time_service)
+    assert isinstance(algo, BidirectionalDijkstraRoutingAlgorithm)
+
+
 def test_routing_factory_unsupported_type_raises():
     req = RouteRequest(
         from_=ReverseGeocodeRequest(lat=51.5, lng=-0.1),
@@ -387,3 +401,4 @@ def test_routing_factory_unsupported_type_raises():
     )
     with pytest.raises(NotImplementedError):
         get_routing_algorithm(req, speed_limit_service, travel_time_service)
+

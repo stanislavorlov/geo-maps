@@ -51,17 +51,17 @@ class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
             if websocket is not None:
                 curr_node = graph.nodes.get(current_id)
                 if curr_node is not None:
-                    edge_coords = None
+                    edge_coordinates = None
                     if current_id in previous:
                         prev_id, _ = previous[current_id]
                         prev_node = graph.nodes.get(prev_id)
                         if prev_node is not None:
-                            edge_coords = [[prev_node.lat, prev_node.lon], [curr_node.lat, curr_node.lon]]
+                            edge_coordinates = [[prev_node.lat, prev_node.lon], [curr_node.lat, curr_node.lon]]
                     try:
                         await websocket.send_json({
                             "type": "progress",
                             "node": [curr_node.lat, curr_node.lon],
-                            "edge": edge_coords,
+                            "edge": edge_coordinates,
                             "nodes_visited_count": len(visited),
                             "current_distance": current_dist,
                         })

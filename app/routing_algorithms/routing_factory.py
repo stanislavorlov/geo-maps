@@ -1,5 +1,6 @@
 from models.search_model import RouteRequest
 from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm
+from routing_algorithms.bidirectional_dijkstra_routing import BidirectionalDijkstraRoutingAlgorithm
 from routing_algorithms.dijkstra_routing import DijkstraRoutingAlgorithm
 from routing_algorithms.astar_routing import AStarRoutingAlgorithm
 from services.speed_limit_service import SpeedLimitService
@@ -13,11 +14,19 @@ def get_routing_algorithm(
 ) -> AbstractRoutingAlgorithm:
     match request.routeType:
         case "dijkstra":
+            if request.bidirectional:
+                return BidirectionalDijkstraRoutingAlgorithm(
+                    speed_limit_service=speed_limit_service,
+                    travel_time_service=travel_time_service,
+                )
             return DijkstraRoutingAlgorithm(
                 speed_limit_service=speed_limit_service,
                 travel_time_service=travel_time_service
             )
         case "astar":
+            # ToDo:
+            if request.bidirectional:
+                pass
             return AStarRoutingAlgorithm(
                 speed_limit_service=speed_limit_service,
                 travel_time_service=travel_time_service

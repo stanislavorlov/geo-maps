@@ -10,3 +10,4 @@ class RouteRequest(BaseModel):
     to: ReverseGeocodeRequest
     routeType: str
     travelMode: str
+    bidirectional: bool = False

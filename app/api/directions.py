@@ -95,6 +95,7 @@ async def websocket_find_route(
                 "start_node": [node_from.lat, node_from.lon],
                 "target_node": [node_to.lat, node_to.lon],
                 "routeType": request.routeType,
+                "bidirectional": request.bidirectional,
             })
 
             algorithm = get_routing_algorithm(request, speed_limit_service, travel_time_service)

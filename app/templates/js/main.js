@@ -13,6 +13,7 @@ var explorationLayer = L.layerGroup().addTo(map);
 
 let activeInputId = 'from-input';
 let currentSearchRouteType = 'dijkstra';
+let currentSearchBidirectional = false;
 let routeSocket = null;
 let isSearching = false;
 
@@ -81,6 +82,11 @@ function initRouteWebSocket() {
 // Initialize WebSocket connection early
 initRouteWebSocket();
 
+function formatAlgorithmName(routeType, isBidirectional) {
+    const base = routeType === 'astar' ? 'A* search' : 'Dijkstra';
+    return isBidirectional ? `Bi-${base}` : base;
+}
+
 function handleWebSocketMessage(data) {
     if (data.type === 'start') {
         const statsPanel = document.getElementById('route-stats');
@@ -88,7 +94,8 @@ function handleWebSocketMessage(data) {
             statsPanel.style.display = 'block';
             const algoBadge = document.getElementById('stat-algo-badge');
             if (algoBadge) {
-                algoBadge.textContent = data.routeType === 'astar' ? 'A* search' : 'Dijkstra';
+                const isBi = data.bidirectional !== undefined ? data.bidirectional : currentSearchBidirectional;
+                algoBadge.textContent = formatAlgorithmName(data.routeType, isBi);
             }
             document.getElementById('stat-visited-nodes').textContent = '0';
             document.getElementById('stat-exec-time').textContent = 'Searching...';
@@ -124,7 +131,7 @@ function handleWebSocketMessage(data) {
     } else if (data.type === 'result') {
         isSearching = false;
         if (data.status === 'success' && data.path && data.path.length > 0) {
-            renderRouteResult(data, currentSearchRouteType);
+            renderRouteResult(data, currentSearchRouteType, currentSearchBidirectional);
         } else {
             explorationLayer.clearLayers();
             const statsPanel = document.getElementById('route-stats');
@@ -134,7 +141,7 @@ function handleWebSocketMessage(data) {
     }
 }
 
-function renderRouteResult(data, routeType) {
+function renderRouteResult(data, routeType, isBidirectional = currentSearchBidirectional) {
     // Clear temporary exploration visualization
     explorationLayer.clearLayers();
 
@@ -149,11 +156,11 @@ function renderRouteResult(data, routeType) {
         opacity: 0.85,
         routeName: "Route"
     })
-    .bindTooltip(`${data.distance >= 1000 ? (data.distance / 1000).toFixed(1) + ' km' : data.distance.toFixed(0) + ' m'}`, {
-        permanent: true,
-        direction: 'center'
-    })
-    .addTo(map);
+        .bindTooltip(`${data.distance >= 1000 ? (data.distance / 1000).toFixed(1) + ' km' : data.distance.toFixed(0) + ' m'}`, {
+            permanent: true,
+            direction: 'center'
+        })
+        .addTo(map);
 
     map.fitBounds(currentRouteLine.getBounds(), { padding: [40, 40] });
 
@@ -165,7 +172,7 @@ function renderRouteResult(data, routeType) {
         // Update Algorithm Badge
         const algoBadge = document.getElementById('stat-algo-badge');
         if (algoBadge) {
-            algoBadge.textContent = routeType === 'astar' ? 'A* search' : 'Dijkstra';
+            algoBadge.textContent = formatAlgorithmName(routeType, isBidirectional);
         }
 
         // Distance formatting
@@ -227,6 +234,7 @@ async function searchRoute() {
     const toInput = document.getElementById('to-input');
     const routeType = document.querySelector('input[name="route-type"]:checked').value;
     const travelMode = document.querySelector('input[name="travel-mode"]:checked').value;
+    const bidirectional = document.getElementById('meta-bidirectional').checked;
 
     const fromLat = fromInput.dataset.lat;
     const fromLng = fromInput.dataset.lng;
@@ -239,6 +247,7 @@ async function searchRoute() {
     }
 
     currentSearchRouteType = routeType;
+    currentSearchBidirectional = bidirectional;
     isSearching = true;
 
     // Reset previous search layers
@@ -252,7 +261,8 @@ async function searchRoute() {
         from_: { lat: parseFloat(fromLat), lng: parseFloat(fromLng) },
         to: { lat: parseFloat(toLat), lng: parseFloat(toLng) },
         routeType: routeType,
-        travelMode: travelMode
+        travelMode: travelMode,
+        bidirectional: bidirectional
     };
 
     // Attempt to use WebSocket for real-time observation

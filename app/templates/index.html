@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 
 <head>
     <meta charset="UTF-8">
@@ -85,6 +85,12 @@
             <label for="route-type-dijkstra">Dijkstra</label>
             <input type="radio" id="route-type-astar" name="route-type" value="astar">
             <label for="route-type-astar">A* search</label>
+        </div>
+        <div class="meta-type-group">
+            <label for="meta-bidirectional">
+                <input type="checkbox" id="meta-bidirectional" name="bidirectional" value="bidirectional">
+                <span>Bidirectional search</span>
+            </label>
         </div>
         <button id="find-route-btn" class="find-route-btn">Find Route</button>
 
