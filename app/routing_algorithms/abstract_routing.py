@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from graph.graph import Graph, Node, Edge
+from typing import Optional, Callable, Awaitable
+from models.notification_model import Notification
 from services.speed_limit_service import SpeedLimitService
 from services.travel_time_service import TravelTimeService
-from typing import Any, Optional
 
 @dataclass
 class RouteResult:
@@ -37,6 +38,6 @@ class AbstractRoutingAlgorithm(ABC):
         start_node: Node,
         target_node: Node,
         travel_mode: str,
-        websocket: Optional[Any] = None
+        on_node_visited: Optional[Callable[[Notification], Awaitable[None]]] = None
     ) -> RouteResult:
         pass

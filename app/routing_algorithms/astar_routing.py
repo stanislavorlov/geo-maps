@@ -1,9 +1,9 @@
-import asyncio
 import math
 import heapq
 import time
-from typing import Any, Optional
+from typing import Optional, Callable, Awaitable
 from graph.graph import Graph, Node, Edge
+from models.notification_model import Notification
 from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm, RouteResult
 from services.speed_limit_service import SpeedLimitService
 from services.travel_time_service import TravelTimeService
@@ -26,9 +26,11 @@ class AStarRoutingAlgorithm(AbstractRoutingAlgorithm):
     def __init__(
             self,
             speed_limit_service: SpeedLimitService,
-            travel_time_service: TravelTimeService,
-            speed: float = AbstractRoutingAlgorithm.DEFAULT_SPEED):
-        super().__init__(speed_limit_service=speed_limit_service, travel_time_service=travel_time_service, speed=speed)
+            travel_time_service: TravelTimeService):
+        super().__init__(
+            speed_limit_service=speed_limit_service,
+            travel_time_service=travel_time_service
+        )
 
     async def find_route(
         self,
@@ -36,7 +38,7 @@ class AStarRoutingAlgorithm(AbstractRoutingAlgorithm):
         start_node: Node,
         target_node: Node,
         travel_mode: str,
-        websocket: Optional[Any] = None
+        on_node_visited: Optional[Callable[[Notification], Awaitable[None]]] = None
     ) -> RouteResult:
         if start_node.id == target_node.id:
             return RouteResult(
@@ -64,26 +66,16 @@ class AStarRoutingAlgorithm(AbstractRoutingAlgorithm):
                 continue
             visited.add(current_id)
 
-            if websocket is not None:
-                curr_node = graph.nodes.get(current_id)
-                if curr_node is not None:
-                    edge_coords = None
-                    if current_id in previous:
-                        prev_id, _ = previous[current_id]
-                        prev_node = graph.nodes.get(prev_id)
-                        if prev_node is not None:
-                            edge_coords = [[prev_node.lat, prev_node.lon], [curr_node.lat, curr_node.lon]]
-                    try:
-                        await websocket.send_json({
-                            "type": "progress",
-                            "node": [curr_node.lat, curr_node.lon],
-                            "edge": edge_coords,
-                            "nodes_visited_count": len(visited),
-                            "current_distance": g_score.get(current_id, 0.0),
-                        })
-                        await asyncio.sleep(0.001)
-                    except Exception:
-                        pass
+            curr_node = graph.nodes.get(current_id)
+            if curr_node is not None and on_node_visited is not None:
+                edge_coordinates = None
+                if current_id in previous:
+                    prev_id, _ = previous[current_id]
+                    prev_node = graph.nodes.get(prev_id)
+                    if prev_node is not None:
+                        edge_coordinates = [[prev_node.lat, prev_node.lon], [curr_node.lat, curr_node.lon]]
+
+                await on_node_visited(Notification(curr_node, edge_coordinates, len(visited), g_score.get(current_id, 0.0)))
 
             if current_id == target_node.id:
                 break

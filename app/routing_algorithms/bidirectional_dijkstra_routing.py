@@ -1,19 +1,23 @@
-import asyncio
 import heapq
 import time
-from typing import Optional, Any
+from typing import Optional, Callable, Awaitable
 from graph.graph import Graph, Node, Edge
+from models.notification_model import Notification
 from routing_algorithms.abstract_routing import AbstractRoutingAlgorithm, RouteResult
 from services.speed_limit_service import SpeedLimitService
 from services.travel_time_service import TravelTimeService
 
 
 class BidirectionalDijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
-    def __init__(self,
-                 speed_limit_service: SpeedLimitService,
-                 travel_time_service: TravelTimeService,
-                 speed: float = AbstractRoutingAlgorithm.DEFAULT_SPEED) -> None:
-        super().__init__(speed_limit_service=speed_limit_service, travel_time_service=travel_time_service, speed=speed)
+    def __init__(
+        self,
+        speed_limit_service: SpeedLimitService,
+        travel_time_service: TravelTimeService
+    ) -> None:
+        super().__init__(
+            speed_limit_service=speed_limit_service,
+            travel_time_service=travel_time_service
+        )
 
     async def find_route(
             self,
@@ -21,7 +25,8 @@ class BidirectionalDijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
             start_node: Node,
             target_node: Node,
             travel_mode: str,
-            websocket: Optional[Any] = None) -> RouteResult:
+            on_node_visited: Optional[Callable[[Notification], Awaitable[None]]] = None
+    ) -> RouteResult:
         if start_node.id == target_node.id:
             return RouteResult(
                 found=True,
@@ -67,7 +72,7 @@ class BidirectionalDijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
             if forward_id not in visited_forward:
                 visited_forward.add(forward_id)
 
-                if websocket is not None:
+                if on_node_visited is not None:
                     forward_node = graph.nodes.get(forward_id)
                     if forward_node is not None:
                         edge_coordinates = None
@@ -76,17 +81,7 @@ class BidirectionalDijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
                             prev_node = graph.nodes.get(prev_id)
                             if prev_node is not None:
                                 edge_coordinates = [[prev_node.lat, prev_node.lon], [forward_node.lat, forward_node.lon]]
-                        try:
-                            await websocket.send_json({
-                                "type": "progress",
-                                "node": [forward_node.lat, forward_node.lon],
-                                "edge": edge_coordinates,
-                                "nodes_visited_count": len(visited_forward) + len(visited_backward),
-                                "current_distance": forward_dist,
-                            })
-                            await asyncio.sleep(0.001)
-                        except Exception:
-                            pass
+                        await on_node_visited(Notification(forward_node, edge_coordinates, len(visited_forward) + len(visited_backward), forward_dist))
 
                 for edge in graph.adjacency.get(forward_id, []):
                     speed = self.speed_limit_service.get_effective_speed(
@@ -117,7 +112,7 @@ class BidirectionalDijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
             if backward_id not in visited_backward:
                 visited_backward.add(backward_id)
 
-                if websocket is not None:
+                if on_node_visited is not None:
                     backward_node = graph.nodes.get(backward_id)
                     if backward_node is not None:
                         edge_coordinates = None
@@ -126,17 +121,7 @@ class BidirectionalDijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
                             next_node = graph.nodes.get(next_id)
                             if next_node is not None:
                                 edge_coordinates = [[backward_node.lat, backward_node.lon], [next_node.lat, next_node.lon]]
-                        try:
-                            await websocket.send_json({
-                                "type": "progress",
-                                "node": [backward_node.lat, backward_node.lon],
-                                "edge": edge_coordinates,
-                                "nodes_visited_count": len(visited_forward) + len(visited_backward),
-                                "current_distance": backward_dist,
-                            })
-                            await asyncio.sleep(0.001)
-                        except Exception:
-                            pass
+                        await on_node_visited(Notification(backward_node, edge_coordinates, len(visited_forward) + len(visited_backward), backward_dist))
 
                 for edge in incoming_adjacency.get(backward_id, []):
                     speed = self.speed_limit_service.get_effective_speed(

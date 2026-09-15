@@ -1,6 +1,8 @@
+import asyncio
 import logging
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from database.graph_repository import GraphRepository
+from models.notification_model import Notification
 from models.search_model import RouteRequest
 from routing_algorithms.routing_factory import get_routing_algorithm
 from services.speed_limit_service import SpeedLimitService
@@ -98,9 +100,23 @@ async def websocket_find_route(
                 "bidirectional": request.bidirectional,
             })
 
+            async def notify_progress(notification: Notification):
+                try:
+                    await websocket.send_json({
+                        "type": "progress",
+                        "node": [notification.node.lat, notification.node.lon],
+                        "edge": notification.coordinates,
+                        "nodes_visited_count": notification.num_visited,
+                        "current_distance": notification.current_distance,
+                    })
+                    await asyncio.sleep(0.001)
+                except Exception:
+                    pass
+
             algorithm = get_routing_algorithm(request, speed_limit_service, travel_time_service)
+
             result = await algorithm.find_route(
-                route_graph, node_from, node_to, request.travelMode, websocket=websocket
+                route_graph, node_from, node_to, request.travelMode, on_node_visited=notify_progress
             )
 
             if not result.found:

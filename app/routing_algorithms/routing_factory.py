@@ -50,7 +50,7 @@ class RoutingAlgorithmFactory:
 def get_routing_algorithm(
     request: RouteRequest,
     speed_limit_service: SpeedLimitService,
-    travel_time_service: TravelTimeService
+    travel_time_service: TravelTimeService,
 ) -> AbstractRoutingAlgorithm:
 
     return RoutingAlgorithmFactory.create(

@@ -338,7 +338,17 @@ async def test_websocket_progress_streaming(algo):
 
     graph = Graph(nodes={1: n1, 2: n2, 3: n3}, edges=[e1, e2])
     ws = MockWebSocket()
-    result = await algo.find_route(graph, n1, n3, travel_mode="driving", websocket=ws)
+    
+    async def notify_progress(node, edge_coordinates, num_visited, current_distance):
+        await ws.send_json({
+            "type": "progress",
+            "node": [node.lat, node.lon],
+            "edge": edge_coordinates,
+            "nodes_visited_count": num_visited,
+            "current_distance": current_distance,
+        })
+
+    result = await algo.find_route(graph, n1, n3, travel_mode="driving", on_node_visited=notify_progress)
 
     assert result.found is True
     assert len(ws.messages) > 0
@@ -401,4 +411,5 @@ def test_routing_factory_unsupported_type_raises():
     )
     with pytest.raises(NotImplementedError):
         get_routing_algorithm(req, speed_limit_service, travel_time_service)
+
 
