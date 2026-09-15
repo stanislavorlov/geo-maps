@@ -64,7 +64,10 @@ class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
                 break
 
             for edge in graph.adjacency.get(current_id, []):
-                speed = self.speed_limit_service.get_effective_speed(edge.road_type, travel_mode, edge.speed, edge.tags, edge.is_reverse)
+                speed = self.speed_limit_service.get_effective_speed(
+                    edge.road_type, travel_mode,
+                    edge.speed, edge.tags,
+                    edge.is_reverse)
                 if speed is None:
                     continue  # Inaccessible edge for this travel mode
 
@@ -102,7 +105,10 @@ class DijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
             to_node = graph.nodes[edge.to_id]
             coordinates.append([to_node.lat, to_node.lon])
             total_distance += edge.distance
-            speed_mph = self.speed_limit_service.get_effective_speed(edge.road_type, travel_mode, edge.speed, edge.tags, edge.is_reverse) or self.default_speed
+            speed_mph = (self.speed_limit_service.get_effective_speed(
+                edge.road_type, travel_mode,
+                edge.speed, edge.tags,
+                edge.is_reverse) or self.default_speed)
             total_time += self.travel_time_service.calculate_travel_time(edge.distance, speed_mph)
 
         end_time = time.perf_counter()

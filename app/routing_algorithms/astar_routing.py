@@ -75,7 +75,11 @@ class AStarRoutingAlgorithm(AbstractRoutingAlgorithm):
                     if prev_node is not None:
                         edge_coordinates = [[prev_node.lat, prev_node.lon], [curr_node.lat, curr_node.lon]]
 
-                await on_node_visited(Notification(curr_node, edge_coordinates, len(visited), g_score.get(current_id, 0.0)))
+                await on_node_visited(Notification(
+                    curr_node,
+                    edge_coordinates,
+                    len(visited),
+                    g_score.get(current_id, 0.0)))
 
             if current_id == target_node.id:
                 break
@@ -83,7 +87,12 @@ class AStarRoutingAlgorithm(AbstractRoutingAlgorithm):
             current_g = g_score.get(current_id, float("inf"))
 
             for edge in graph.adjacency.get(current_id, []):
-                speed = self.speed_limit_service.get_effective_speed(edge.road_type, travel_mode, edge.speed, edge.tags, edge.is_reverse)
+                speed = self.speed_limit_service.get_effective_speed(
+                    edge.road_type,
+                    travel_mode,
+                    edge.speed,
+                    edge.tags,
+                    edge.is_reverse)
                 if speed is None:
                     continue  # Inaccessible edge for this travel mode
 
@@ -124,7 +133,13 @@ class AStarRoutingAlgorithm(AbstractRoutingAlgorithm):
             to_node = graph.nodes[edge.to_id]
             coordinates.append([to_node.lat, to_node.lon])
             total_distance += edge.distance
-            speed_mph = self.speed_limit_service.get_effective_speed(edge.road_type, travel_mode, edge.speed, edge.tags, edge.is_reverse) or self.default_speed
+            speed_mph = (self.speed_limit_service.get_effective_speed(
+                edge.road_type,
+                travel_mode,
+                edge.speed,
+                edge.tags,
+                edge.is_reverse)
+                         or self.default_speed)
             total_time += self.travel_time_service.calculate_travel_time(edge.distance, speed_mph)
 
         end_time = time.perf_counter()

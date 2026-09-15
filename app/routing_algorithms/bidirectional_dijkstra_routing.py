@@ -80,8 +80,15 @@ class BidirectionalDijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
                             prev_id, _ = previous_forward[forward_id]
                             prev_node = graph.nodes.get(prev_id)
                             if prev_node is not None:
-                                edge_coordinates = [[prev_node.lat, prev_node.lon], [forward_node.lat, forward_node.lon]]
-                        await on_node_visited(Notification(forward_node, edge_coordinates, len(visited_forward) + len(visited_backward), forward_dist))
+                                edge_coordinates = [
+                                    [prev_node.lat, prev_node.lon],
+                                    [forward_node.lat, forward_node.lon]
+                                ]
+                        await on_node_visited(Notification(
+                            forward_node,
+                            edge_coordinates,
+                            len(visited_forward) + len(visited_backward),
+                            forward_dist))
 
                 for edge in graph.adjacency.get(forward_id, []):
                     speed = self.speed_limit_service.get_effective_speed(
@@ -120,8 +127,15 @@ class BidirectionalDijkstraRoutingAlgorithm(AbstractRoutingAlgorithm):
                             next_id, _ = previous_backward[backward_id]
                             next_node = graph.nodes.get(next_id)
                             if next_node is not None:
-                                edge_coordinates = [[backward_node.lat, backward_node.lon], [next_node.lat, next_node.lon]]
-                        await on_node_visited(Notification(backward_node, edge_coordinates, len(visited_forward) + len(visited_backward), backward_dist))
+                                edge_coordinates = [
+                                    [backward_node.lat, backward_node.lon],
+                                    [next_node.lat, next_node.lon]
+                                ]
+                        await on_node_visited(Notification(
+                            backward_node,
+                            edge_coordinates,
+                            len(visited_forward) + len(visited_backward),
+                            backward_dist))
 
                 for edge in incoming_adjacency.get(backward_id, []):
                     speed = self.speed_limit_service.get_effective_speed(
